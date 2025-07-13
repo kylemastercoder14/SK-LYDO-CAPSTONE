@@ -18,13 +18,36 @@ export type FormState = {
   redirect?: string;
   user?: {
     role: UserRole;
+    id: string;
   };
+  hasSecurityQuestion?: boolean;
 };
 
 export const initialState: FormState = {
   errors: {},
   message: "",
   success: false,
+};
+
+export type FormStateForgot = {
+  errors?: {
+    username?: string[];
+    securityAnswer?: string[];
+    newPassword?: string[];
+    confirmPassword?: string[];
+  };
+  message: string;
+  success?: boolean;
+  securityQuestion?: string;
+  step?: "username" | "security" | "reset";
+  username?: string;
+};
+
+export const initialStateForgot: FormStateForgot = {
+  errors: {},
+  message: "",
+  success: false,
+  step: "username",
 };
 
 export function getGreeting() {

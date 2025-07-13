@@ -1,18 +1,24 @@
-import Header from '@/components/globals/header';
+"use client";
+import Header from "@/components/globals/header";
+import PhilippineYouthDevelopmentPlan from '@/components/globals/pydp';
+import TechAssistant from '@/components/globals/tech-assistant';
+import Footer from '@/components/globals/footer';
+import ContactPage from '@/components/globals/contact';
+import HeroSection from '@/components/globals/hero';
+import MissionVisionSection from '@/components/globals/mission-vision';
 
 export default function HomePage() {
   return (
-    <div className='min-h-screen'>
+    <div className="min-h-screen dark:bg-[#30334e] bg-white">
       <section className="relative hero-background">
         <Header />
       </section>
-      <section className="py-20 dark:bg-[#30334e] bg-white">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">Welcome to Our Website</h1>
-          <p className="text-lg text-muted-foreground">This is a sample page with a hero section and a content section.</p>
-        </div>
-      </section>
-
+      <HeroSection />
+      <MissionVisionSection />
+      <PhilippineYouthDevelopmentPlan />
+      <TechAssistant />
+      <ContactPage />
+      <Footer />
     </div>
   );
 }

@@ -8,6 +8,32 @@ export const loginSchema = z.object({
   remember: z.boolean().optional(),
 });
 
+export const usernameSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  step: z.literal("username"),
+});
+
+export const securitySchema = z.object({
+  username: z.string().min(1),
+  securityQuestion: z.string().min(1),
+  securityAnswer: z.string().min(1, "Answer is required"),
+  step: z.literal("security"),
+});
+
+export const passwordResetSchema = z
+  .object({
+    username: z.string().min(1),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters"),
+    step: z.literal("reset"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
 export const registerSchema = z
   .object({
     username: z.string().min(3, "Username must be at least 3 characters"),

@@ -76,3 +76,26 @@ export const BARANGAYS = [
   "Zone III (Pob.)",
   "Zone IV (Pob.)",
 ];
+
+export const SECURITY_QUESTIONS = [
+  "What is your mother’s maiden name?",
+  "What was the name of your first pet?",
+  "What was the make and model of your first car?",
+  "What is your favorite teacher’s name?",
+  "In what city were you born?",
+  "What was the name of your elementary school?",
+  "What is your father’s middle name?",
+  "What is your favorite movie?",
+  "What is the name of your best childhood friend?",
+  "What street did you live on in third grade?",
+  "What is the title of your favorite book?",
+  "What is your dream job?",
+  "What is the name of your childhood hero?",
+  "Where did you go on your first vacation?",
+  "What was your first mobile phone brand?",
+  "What is the name of the first company you worked for?",
+  "What was your favorite subject in school?",
+  "Who was your favorite cartoon character as a child?",
+  "What’s the nickname only your family uses for you?",
+  "What is the name of the hospital where you were born?",
+];

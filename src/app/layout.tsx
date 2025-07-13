@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/globals/theme-provider";
-import { ModeToggle } from '@/components/globals/toggle-theme';
 import "./globals.css";
 import { Toaster } from 'sonner';
 
@@ -38,7 +37,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <ModeToggle />
           <Toaster richColors position='top-right' />
         </ThemeProvider>
       </body>

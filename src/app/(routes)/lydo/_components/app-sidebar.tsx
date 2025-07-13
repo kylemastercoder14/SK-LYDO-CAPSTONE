@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import {
+  IconCopyCheck,
   IconDashboard,
-  IconDatabase,
-  IconFileDescription,
-  IconUsersGroup,
+  IconFolderCheck,
+  IconWallet,
 } from "@tabler/icons-react";
 
 import {
@@ -23,28 +23,32 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/admin/dashboard",
+      url: "/lydo/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Accounts",
-      url: "/admin/accounts",
-      icon: IconUsersGroup,
+      title: "Budget Report",
+      url: "/lydo/budget-report",
+      icon: IconWallet,
     },
     {
-      title: "System Logs",
-      url: "/admin/system-logs",
-      icon: IconFileDescription,
+      title: "Project Management",
+      url: "/lydo/project-management",
+      icon: IconFolderCheck,
     },
     {
-      title: "Data Backup",
-      url: "/admin/data-backup",
-      icon: IconDatabase,
+      title: "Approved Budget & Project",
+      url: "/lydo/approved-budget-project",
+      icon: IconCopyCheck,
     },
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  barangay: string;
+}
+
+export function AppSidebar({ barangay, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -54,7 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="/admin/dashboard">
+              <a href="/sk-official/dashboard">
                 <div className="relative size-8">
                   <Image
                     src="/logo.png"
@@ -70,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain barangay={barangay} items={data.navMain} />
       </SidebarContent>
     </Sidebar>
   );
