@@ -131,3 +131,12 @@ export const officialSchema = z.object({
       { message: "Duplicate users are not allowed." }
     ),
 });
+
+export const eventSchema = z.object({
+  name: z.string().min(1, { message: "Event name is required." }),
+  description: z.string().min(1, { message: "Event description is required." }),
+  thumbnail: z.string().url({ message: "Thumbnail is required." }),
+  barangay: z.string().min(1, { message: "Barangay is required." }),
+  startDate: z.string().min(1, { message: "Start date is required." }),
+  endDate: z.string().min(1, { message: "End date is required." }),
+});

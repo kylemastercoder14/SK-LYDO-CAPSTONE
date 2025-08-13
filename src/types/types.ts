@@ -6,6 +6,7 @@ import {
   meetingMinutesSchema,
   projectProposalSchema,
   projectReportSchema,
+  eventSchema,
 } from "@/validators";
 
 export type ProjectReportFormValues = z.infer<typeof projectReportSchema>;
@@ -14,6 +15,7 @@ export type ProjectProposalFormValues = z.infer<typeof projectProposalSchema>;
 export type CBYDPReportFormValues = z.infer<typeof cbydpReportSchema>;
 export type MeetingAgendaFormValues = z.infer<typeof meetingAgendaSchema>;
 export type MinutesMeetingFormValues = z.infer<typeof meetingMinutesSchema>;
+export type EventFormValues = z.infer<typeof eventSchema>;
 
 export type Trend = "up" | "down" | "stable";
 

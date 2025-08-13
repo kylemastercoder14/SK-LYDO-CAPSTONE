@@ -48,7 +48,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import useActiveStatus from "@/hooks/use-active-status";
-import { CommitteeSelect } from './committee-select';
+import { CommitteeSelect } from "./committee-select";
 
 export const schema = z.object({
   id: z.string(),
@@ -79,10 +79,14 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: "Committee",
     cell: ({ row }) => {
       const isAssigned = row.original.committee !== "All committees";
-      if (isAssigned) {
+      if (isAssigned || row.original.position !== "CHAIRPERSON") {
         return row.original.committee;
       }
-      return <CommitteeSelect userId={row.original.id} />;
+      return (
+        <CommitteeSelect
+          userId={row.original.id}
+        />
+      );
     },
   },
   {

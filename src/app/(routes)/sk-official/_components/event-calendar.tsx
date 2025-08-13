@@ -53,7 +53,7 @@ const EventCalendar = () => {
         className="rounded-lg bg-card w-full border"
       />
       <h3 className="font-medium text-lg mt-3 mb-2">Events & Activities Schedule</h3>
-      <div className="flex w-full flex-col gap-2 h-[25vh] no-scrollbar overflow-y-auto">
+      <div className="flex w-full flex-col gap-2 h-[30vh] no-scrollbar overflow-y-auto">
         {events.map((event) => (
           <div
             key={event.title}
