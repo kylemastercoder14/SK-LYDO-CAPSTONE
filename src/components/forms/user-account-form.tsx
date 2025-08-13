@@ -51,6 +51,7 @@ const UserAccountForm = ({ initialData }: { initialData: User | null }) => {
       username: initialData?.username || "",
       password: "",
       role: initialData?.role || "SK_OFFICIAL",
+      officialType: initialData?.officialType || "",
       barangay: initialData?.barangay || "",
     },
   });
@@ -100,7 +101,11 @@ const UserAccountForm = ({ initialData }: { initialData: User | null }) => {
             </p>
 
             <div className="flex items-center gap-2">
-              <Input value={generatedPassword} readOnly className="font-mono rounded-none" />
+              <Input
+                value={generatedPassword}
+                readOnly
+                className="font-mono rounded-none"
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -118,7 +123,7 @@ const UserAccountForm = ({ initialData }: { initialData: User | null }) => {
 
             <div className="flex justify-end">
               <Button
-              variant="primary"
+                variant="primary"
                 onClick={() => {
                   setShowPasswordModal(false);
                   router.push("/admin/accounts");
@@ -226,6 +231,39 @@ const UserAccountForm = ({ initialData }: { initialData: User | null }) => {
           {form.watch("role") === "SK_OFFICIAL" && (
             <FormField
               control={form.control}
+              name="officialType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Type <span className="text-red-600">*</span>
+                  </FormLabel>
+                  <Select
+                    disabled={isSubmitting}
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="rounded-none w-full">
+                        <SelectValue placeholder="Select a position" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="CHAIRPERSON">
+                        Chairperson
+                      </SelectItem>
+                      <SelectItem value="KAGAWAD">Kagawad</SelectItem>
+                      <SelectItem value="TREASURER">Treasurer</SelectItem>
+                      <SelectItem value="SECRETARY">Secretary</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {form.watch("role") === "SK_OFFICIAL" && (
+            <FormField
+              control={form.control}
               name="barangay"
               render={({ field }) => (
                 <FormItem>
@@ -270,11 +308,13 @@ const UserAccountForm = ({ initialData }: { initialData: User | null }) => {
             <Button disabled={isSubmitting} type="submit" variant="primary">
               {isSubmitting ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> {initialData ? "Saving Changes..." : "Submitting..."}
+                  <Loader2 className="size-4 animate-spin" />{" "}
+                  {initialData ? "Saving Changes..." : "Submitting..."}
                 </>
               ) : (
                 <>
-                  <Save className="size-4" /> {initialData ? "Save Changes" : "Submit"}
+                  <Save className="size-4" />{" "}
+                  {initialData ? "Save Changes" : "Submit"}
                 </>
               )}
             </Button>

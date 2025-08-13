@@ -2,10 +2,14 @@
 
 import * as React from "react";
 import {
+  IconClock,
   IconDashboard,
   IconDatabase,
+  IconFileCheck,
   IconFileDescription,
+  IconSpeakerphone,
   IconUsersGroup,
+  IconWallet,
 } from "@tabler/icons-react";
 
 import {
@@ -18,37 +22,111 @@ import {
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
 import Image from "next/image";
+import { OfficialType } from '@prisma/client';
 
 const data = {
-  navMain: [
+  CHAIRPERSON: [
     {
       title: "Dashboard",
       url: "/sk-official/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Accounts",
-      url: "/sk-official/accounts",
-      icon: IconUsersGroup,
+      title: "Budget & Project Proposal",
+      url: "/sk-official/budget-project-proposal",
+      icon: IconFileCheck,
     },
     {
-      title: "System Logs",
-      url: "/sk-official/system-logs",
+      title: "Project Reports",
+      url: "/sk-official/project-reports",
       icon: IconFileDescription,
     },
     {
-      title: "Data Backup",
-      url: "/sk-official/data-backup",
+      title: "Budget Reports",
+      url: "/sk-official/budget-reports",
+      icon: IconWallet,
+    },
+    {
+      title: "CBYDP",
+      url: "/sk-official/cbydp",
+      icon: IconUsersGroup,
+    },
+    {
+      title: "Meeting Agenda",
+      url: "/sk-official/meeting-agenda",
       icon: IconDatabase,
     },
+    {
+      title: "Minutes of Meeting",
+      url: "/sk-official/minutes-of-meeting",
+      icon: IconClock,
+    },
   ],
+  KAGAWAD: [
+    {
+      title: "Dashboard",
+      url: "/sk-official/dashboard",
+      icon: IconDashboard,
+    },
+    {
+      title: "Budget & Project Proposal",
+      url: "/sk-official/budget-project-proposal",
+      icon: IconFileCheck,
+    },
+    {
+      title: "Events & Activities",
+      url: "/sk-official/events-activities",
+      icon: IconSpeakerphone,
+    },
+  ],
+  TREASURER: [
+    {
+      title: "Dashboard",
+      url: "/sk-official/dashboard",
+      icon: IconDashboard,
+    },
+     {
+      title: "Budget Reports",
+      url: "/sk-official/budget-reports",
+      icon: IconWallet,
+    },
+    {
+      title: "Budget & Project Proposal",
+      url: "/sk-official/budget-project-proposal",
+      icon: IconFileCheck,
+    },
+  ],
+  SECRETARY: [
+    {
+      title: "Dashboard",
+      url: "/sk-official/dashboard",
+      icon: IconDashboard,
+    },
+    {
+      title: "Minutes of Meeting",
+      url: "/sk-official/minutes-of-meeting",
+      icon: IconClock,
+    },
+    {
+      title: "Resolution",
+      url: "/sk-official/resolution",
+      icon: IconClock,
+    },
+    {
+      title: "Project Reports",
+      url: "/sk-official/project-reports",
+      icon: IconFileDescription,
+    },
+  ]
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   barangay: string;
+  officialType: OfficialType;
 }
 
-export function AppSidebar({ barangay, ...props }: AppSidebarProps) {
+export function AppSidebar({ officialType, barangay, ...props }: AppSidebarProps) {
+  const navItems = data[officialType];
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -74,7 +152,7 @@ export function AppSidebar({ barangay, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain barangay={barangay} items={data.navMain} />
+        <NavMain barangay={barangay} items={navItems} />
       </SidebarContent>
     </Sidebar>
   );

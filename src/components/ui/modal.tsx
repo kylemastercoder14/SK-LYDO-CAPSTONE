@@ -47,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </DialogHeader>
         )}
-        <div>{children}</div>
+        {children}
       </DialogContent>
     </Dialog>
   );

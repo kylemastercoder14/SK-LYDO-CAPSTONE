@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { UserRole } from "./config";
+import { Trend } from "@/types/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -112,3 +113,101 @@ export function generateRandomPassword(
 
   return password;
 }
+
+export async function ensureBlob(file: File | string): Promise<Blob> {
+  if (file instanceof Blob) {
+    return file; // If it's already a Blob (which File objects are), return it directly
+  }
+
+  // If it's a string, assume it's a data URL and convert it to a Blob
+  if (typeof file === "string") {
+    try {
+      const response = await fetch(file);
+      const blob = await response.blob();
+      return blob;
+    } catch (error) {
+      console.error("Error converting string to Blob:", error);
+      throw new Error("Failed to convert string to Blob.");
+    }
+  }
+
+  // If it's none of the above, throw an error or handle accordingly
+  throw new Error(
+    "Unsupported file input type. Expected File or a data URL string."
+  );
+}
+
+export const formattedBudget = (budget: number) => {
+  return new Intl.NumberFormat("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(budget));
+};
+
+export const getMonthStartEnd = (date: Date) => {
+  const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  const endOfMonth = new Date(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  );
+  return { start: startOfMonth, end: endOfMonth };
+};
+
+export const getPreviousMonthStartEnd = (date: {
+  getFullYear: () => number;
+  getMonth: () => number;
+}) => {
+  const previousMonth = new Date(date.getFullYear(), date.getMonth() - 1, 1);
+  return getMonthStartEnd(previousMonth);
+};
+
+export const calculateMetrics = (
+  current: number,
+  previous: number,
+  title: string
+): {
+  data: string;
+  previousData: string; // Add previousData property
+  percentage: string;
+  description: string;
+  recommendation: string;
+  trend: Trend;
+} => {
+  const percentage =
+    previous > 0
+      ? ((current - previous) / previous) * 100
+      : current > 0
+      ? 100
+      : 0;
+
+  const trend: Trend =
+    percentage > 0 ? "up" : percentage < 0 ? "down" : "stable";
+
+  let description;
+  let recommendation;
+
+  if (trend === "up") {
+    description = `Increase in ${title.toLowerCase()} submitted`;
+    recommendation = `Encourage continued submissions`;
+  } else if (trend === "down") {
+    description = `Decrease in ${title.toLowerCase()} submitted`;
+    recommendation = `Encourage timely submissions`;
+  } else {
+    description = `Stable number of ${title.toLowerCase()} submitted`;
+    recommendation = `Maintain current reporting practices`;
+  }
+
+  return {
+    data: current.toString() || "0",
+    previousData: previous.toString() || "0", // Return the previous data
+    percentage: `${Math.abs(percentage).toFixed(2)}%`,
+    description,
+    recommendation,
+    trend,
+  };
+};

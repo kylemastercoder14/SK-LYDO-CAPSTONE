@@ -4,6 +4,8 @@ import { AppSidebar } from "./_components/app-sidebar";
 import { SiteHeader } from "./_components/site-header";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import { OfficialType } from '@prisma/client';
+import ActiveStatus from './_components/active-status';
 
 const SkOfficialLayout = async ({children}: {children: React.ReactNode}) => {
   const user = await getServerSession();
@@ -26,8 +28,9 @@ const SkOfficialLayout = async ({children}: {children: React.ReactNode}) => {
 		} as React.CSSProperties
 	  }
 	>
-	  <AppSidebar variant="inset" barangay={user.barangay as string} />
+	  <AppSidebar variant="inset" officialType={user.officialType as OfficialType} barangay={user.barangay as string} />
 	  <SidebarInset>
+		<ActiveStatus userId={user.id} />
 		<SiteHeader user={user} />
 		{children}
 	  </SidebarInset>

@@ -10,9 +10,9 @@ const Page = async () => {
   const data = await db.user.findMany({
     where: {
       isActive: true,
-	  role: {
-		not: "ADMIN",
-	  }
+      role: {
+        not: "ADMIN",
+      },
     },
     orderBy: {
       createdAt: "desc",

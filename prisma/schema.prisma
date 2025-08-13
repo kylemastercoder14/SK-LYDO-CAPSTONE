@@ -3,30 +3,47 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id               String       @id @default(uuid())
-  username         String       @unique
-  email            String?      @unique
+  id               String        @id @default(uuid())
+  username         String        @unique
+  email            String?       @unique
   image            String?
   firstName        String?
   lastName         String?
   bio              String?
-  isActive         Boolean      @default(true)
+  isActive         Boolean       @default(true)
   password         String
   securityQuestion String?
   securityAnswer   String?
-  role             UserRole     @default(SK_OFFICIAL)
+  role             UserRole      @default(SK_OFFICIAL)
+  officialType     OfficialType?
+  committee        String?
   barangay         String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  systemLogs       SystemLogs[]
+  lastActiveAt DateTime?
 
-  @@map("users")
+  systemLogs      SystemLogs[]
+  projectReports  ProjectReports[]
+  budgetReports   BudgetReports[]
+  projectProposal ProjectProposal[]
+  cbydp           CBYDP[]
+  meetingAgenda   MeetingAgenda[]
+  meetingMinutes  MeetingMinutes[]
+  officials       Officials[]
+}
+
+enum OfficialType {
+  CHAIRPERSON
+  KAGAWAD
+  TREASURER
+  SECRETARY
 }
 
 enum UserRole {
@@ -44,6 +61,116 @@ model SystemLogs {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
 
-  @@map("system_logs")
+model ProjectReports {
+  id        String   @id @default(uuid())
+  name      String
+  fileSize  String
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  uploadedBy String
+  user       User   @relation(fields: [uploadedBy], references: [id])
+}
+
+model BudgetReports {
+  id        String   @id @default(uuid())
+  name      String
+  fileSize  String
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  uploadedBy String
+  user       User   @relation(fields: [uploadedBy], references: [id])
+}
+
+model CBYDP {
+  id        String   @id @default(uuid())
+  name      String
+  fileSize  String
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  uploadedBy String
+  user       User   @relation(fields: [uploadedBy], references: [id])
+}
+
+model MeetingAgenda {
+  id        String   @id @default(uuid())
+  name      String
+  fileSize  String
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  uploadedBy String
+  user       User   @relation(fields: [uploadedBy], references: [id])
+}
+
+model MeetingMinutes {
+  id        String   @id @default(uuid())
+  name      String
+  fileSize  String
+  fileType  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  uploadedBy String
+  user       User   @relation(fields: [uploadedBy], references: [id])
+}
+
+model ProjectProposal {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  budget      Float
+  fileUrl     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  status             String  @default("Pending") // Pending, Approved, Rejected
+  reasonForRejection String?
+
+  createdBy String
+  user      User   @relation(fields: [createdBy], references: [id])
+}
+
+model Officials {
+  id        String   @id @default(uuid())
+  name      String
+  position  String
+  committee String?
+  barangay  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }

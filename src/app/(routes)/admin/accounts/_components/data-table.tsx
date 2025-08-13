@@ -90,7 +90,7 @@ export function DataTable<TData, TValue>({
     },
     initialState: {
       pagination: {
-        pageSize: 5,
+        pageSize: 10,
       },
     },
   });
@@ -239,7 +239,7 @@ export function DataTable<TData, TValue>({
                 table.setPageSize(Number(e));
               }}
             >
-              <SelectTrigger className="w-[60px]">
+              <SelectTrigger className="w-[80px]">
                 <SelectValue
                   placeholder={table.getState().pagination.pageSize}
                 />
