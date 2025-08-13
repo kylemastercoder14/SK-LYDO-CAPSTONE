@@ -23,7 +23,6 @@ import Heading from "@/components/globals/heading";
 import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { EventFormValues } from "@/types/types";
-import { SmartDatetimeInput } from "@/components/globals/smart-date-time-input";
 
 interface EventFormProps {
   initialData: Events | null;
@@ -142,12 +141,7 @@ const EventForm: React.FC<EventFormProps> = ({
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <SmartDatetimeInput
-                        onValueChange={field.onChange}
-                        value={field.value ? new Date(field.value) : undefined}
-                        placeholder="e.g. tomorrow at 3pm"
-                        disabled={loading}
-                      />
+                      TODO: Add a date picker component here
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,12 +155,7 @@ const EventForm: React.FC<EventFormProps> = ({
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      <SmartDatetimeInput
-                        onValueChange={field.onChange}
-                        value={field.value ? new Date(field.value) : undefined}
-                        placeholder="e.g. tomorrow at 3pm"
-                        disabled={loading}
-                      />
+                      TODO: Add a date picker component here
                     </FormControl>
                     <FormMessage />
                   </FormItem>
