@@ -127,7 +127,7 @@ const Page = () => {
               key={index}
               title={stat.title}
               data={stat.data}
-              trending={stat.trending}
+              trending={stat.trending as "up" | "down"}
               percentage={stat.percentage}
               description={stat.description}
               recommendation={stat.recommendation}
