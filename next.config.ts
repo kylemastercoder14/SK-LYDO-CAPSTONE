@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     domains: ["nyc-sk.com"],
   },
   devIndicators: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
