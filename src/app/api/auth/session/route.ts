@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import db from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET() {
   const sessionCookie = (await cookies()).get("auth-session");

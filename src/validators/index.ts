@@ -4,7 +4,6 @@ import { z } from "zod";
 export const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.nativeEnum(UserRole),
   remember: z.boolean().optional(),
 });
 
@@ -72,6 +71,12 @@ export const budgetReportSchema = z.object({
   fileSize: z.string().min(1, { message: "File size is required." }),
   fileType: z.string().min(1, { message: "File type is required." }),
   fileUrl: z.string().url({ message: "A valid file URL is required." }),
+});
+
+export const budgetDistributionSchema = z.object({
+  allocated: z.string().min(1, { message: "Allocated is required." }),
+  spent: z.coerce.number().min(1, { message: "Spent is required." }),
+  year: z.string().min(1, { message: "Year is required." }),
 });
 
 export const projectProposalSchema = z.object({

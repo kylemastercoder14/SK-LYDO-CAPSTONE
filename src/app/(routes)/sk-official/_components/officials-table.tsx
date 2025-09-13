@@ -78,15 +78,20 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     accessorKey: "committee",
     header: "Committee",
     cell: ({ row }) => {
-      const isAssigned = row.original.committee !== "All committees";
-      if (isAssigned || row.original.position !== "CHAIRPERSON") {
-        return row.original.committee;
+      const { committee, position, id } = row.original;
+
+      // 🔒 If not chairperson → always show text only
+      if (position !== "CHAIRPERSON") {
+        return committee;
       }
-      return (
-        <CommitteeSelect
-          userId={row.original.id}
-        />
-      );
+
+      // 👩‍💼 If chairperson but not assigned → show text only
+      if (committee && committee !== null) {
+        return committee;
+      }
+
+      // ✅ If chairperson and unassigned → allow editing
+      return <CommitteeSelect userId={id} />;
     },
   },
   {

@@ -3,8 +3,6 @@ import Heading from "@/components/globals/heading";
 import db from "@/lib/db";
 import EventModal from "./_components/event-modal";
 import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Client from './_components/client';
 
@@ -19,11 +17,6 @@ const Page = async () => {
 	},
   });
 
-  if (!user) {
-	toast.loading("Logging out due to inactivity...");
-	redirect("/sign-in");
-  }
-
   return (
 	<div className="p-5">
 	  <div className="flex items-center justify-between">
@@ -31,7 +24,7 @@ const Page = async () => {
 		  title="Events and Activities"
 		  description="View and manage events and activities for your barangay."
 		/>
-		<EventModal userId={user?.id} barangay={user?.barangay as string} />
+		<EventModal userId={user?.id ?? ""} barangay={user?.barangay as string} />
 	  </div>
 	  <div className="mt-5">
 		<Tabs defaultValue="upcoming">

@@ -5,8 +5,6 @@ import db from "@/lib/db";
 import { columns } from "./_components/columns";
 import MinutesMeetingModal from "./_components/minutes-meeting-modal";
 import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Page = async () => {
@@ -25,11 +23,6 @@ const Page = async () => {
     },
   });
 
-  if (!user) {
-    toast.loading("Logging out due to inactivity...");
-    redirect("/sign-in");
-  }
-
   return (
     <div className="p-5">
       <div className="flex items-center justify-between">
@@ -37,7 +30,7 @@ const Page = async () => {
           title="Minutes of Meeting"
           description="View and manage minutes of meeting for your barangay."
         />
-        <MinutesMeetingModal userId={user?.id} />
+        <MinutesMeetingModal userId={user?.id ?? ""} />
       </div>
       <div className="mt-5">
         <Tabs defaultValue="active">

@@ -5,6 +5,7 @@ import {
   IconClock,
   IconDashboard,
   IconDatabase,
+  IconDeviceTabletPlus,
   IconFileCheck,
   IconFileDescription,
   IconSpeakerphone,
@@ -45,6 +46,11 @@ const data = {
       title: "Budget Reports",
       url: "/sk-official/budget-reports",
       icon: IconWallet,
+    },
+    {
+      title: "Budget Distribution",
+      url: "/sk-official/budget-distribution",
+      icon: IconDeviceTabletPlus,
     },
     {
       title: "CBYDP",
@@ -94,6 +100,11 @@ const data = {
       title: "Budget & Project Proposal",
       url: "/sk-official/budget-project-proposal",
       icon: IconFileCheck,
+    },
+    {
+      title: "Budget Distribution",
+      url: "/sk-official/budget-distribution",
+      icon: IconDeviceTabletPlus,
     },
   ],
   SECRETARY: [

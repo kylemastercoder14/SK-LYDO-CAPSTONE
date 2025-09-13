@@ -98,9 +98,6 @@ const Page = async () => {
           gte: threeMonthsAgo,
           lte: now,
         },
-        status: {
-          in: ["Approved", "Rejected"],
-        },
       },
       select: {
         createdAt: true,
@@ -152,7 +149,7 @@ const Page = async () => {
       const dateKey = proposal.createdAt.toISOString().split("T")[0];
       if (dailyCounts.has(dateKey)) {
         const counts = dailyCounts.get(dateKey);
-        if (proposal.status === "Approved") {
+        if (proposal.status === "In Progress" || proposal.status === "Completed") {
           counts.approved += 1;
         } else if (proposal.status === "Rejected") {
           counts.rejected += 1;
@@ -197,6 +194,20 @@ const Page = async () => {
       committee: official.committee || "All committees",
     };
   });
+
+  const events = await db.events.findMany({
+    where: {
+      barangay: user.barangay as string,
+    },
+  });
+
+  const budgetDistribution = await db.budgetDistribution.findMany({
+    where: {
+      barangay: user.barangay as string,
+      isApproved: true,
+    },
+  });
+
   return (
     <div className="p-5">
       <div className="grid lg:grid-cols-4 grid-cols-1 gap-5">
@@ -215,11 +226,11 @@ const Page = async () => {
       </div>
       <div className="mt-5 grid lg:grid-cols-5 grid-cols-1 gap-5">
         <div className="lg:col-span-2">
-          <EventCalendar />
+          <EventCalendar events={events} />
         </div>
         <div className="lg:col-span-3 space-y-5">
           <OfficialsTable data={formattedOfficials} />
-          <BudgetPieChart />
+          <BudgetPieChart budgetDistribution={budgetDistribution} />
         </div>
       </div>
     </div>

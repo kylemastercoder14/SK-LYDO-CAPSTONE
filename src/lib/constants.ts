@@ -99,3 +99,28 @@ export const SECURITY_QUESTIONS = [
   "What’s the nickname only your family uses for you?",
   "What is the name of the hospital where you were born?",
 ];
+
+export const backupTables = [
+  "User",
+  "SystemLogs",
+  "ProjectReports",
+  "BudgetReports",
+  "CBYDP",
+  "MeetingAgenda",
+  "MeetingMinutes",
+  "ProjectProposal",
+  "Officials",
+  "Events",
+];
+
+export const COMMITTEE = [
+  "Health",
+  "Education",
+  "Economic Empowerment",
+  "Social Inclusion & Equity",
+  "Peace & Security",
+  "Environment",
+  "Governance",
+  "Active Citizenship",
+  "Other MOOE",
+];

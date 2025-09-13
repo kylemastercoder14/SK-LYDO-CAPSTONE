@@ -5,6 +5,7 @@ import { compare, hash } from "bcryptjs";
 import db from "@/lib/db";
 import { cookies } from "next/headers";
 import {
+  budgetDistributionSchema,
   budgetReportSchema,
   cbydpReportSchema,
   loginSchema,
@@ -19,8 +20,14 @@ import {
 } from "@/validators";
 import { ROLE_CONFIG, UserRole } from "@/lib/config";
 import z from "zod";
-import { FormState, FormStateForgot } from "@/lib/utils";
 import {
+  calcTrend,
+  FormState,
+  FormStateForgot,
+  generateInsights,
+} from "@/lib/utils";
+import {
+  BudgetDistributionFormValues,
   BudgetReportFormValues,
   CBYDPReportFormValues,
   MeetingAgendaFormValues,
@@ -29,12 +36,22 @@ import {
   ProjectReportFormValues,
 } from "@/types/types";
 import { OfficialType } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
-export async function setAuthCookie(userId: string, remember: boolean) {
-  (await cookies()).set("auth-session", userId, {
+const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+
+export async function setAuthCookie(
+  user: { id: string; role: string },
+  remember: boolean
+) {
+  const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
+    expiresIn: remember ? "30d" : "1d",
+  });
+
+  (await cookies()).set("auth-session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    maxAge: remember ? 30 * 24 * 60 * 60 : undefined,
+    maxAge: remember ? 30 * 24 * 60 * 60 : 24 * 60 * 60,
   });
 }
 
@@ -46,7 +63,6 @@ export async function loginAction(
     const validatedFields = loginSchema.safeParse({
       username: formData.get("username"),
       password: formData.get("password"),
-      role: formData.get("role"),
       remember: formData.get("remember") === "on",
     });
 
@@ -57,7 +73,7 @@ export async function loginAction(
       };
     }
 
-    const { username, password, role, remember } = validatedFields.data;
+    const { username, password, remember } = validatedFields.data;
 
     // Check if user exists
     const user = await db.user.findUnique({
@@ -95,14 +111,6 @@ export async function loginAction(
       };
     }
 
-    // Verify role
-    if (user.role !== role) {
-      return {
-        errors: { role: ["You don't have permission to access this role"] },
-        message: "Role permission denied",
-      };
-    }
-
     const hasSecurityQuestion = Boolean(
       user.securityQuestion && user.securityAnswer
     );
@@ -118,7 +126,7 @@ export async function loginAction(
 
     // Set session cookie
     if (hasSecurityQuestion) {
-      await setAuthCookie(user.id, remember ?? false);
+      await setAuthCookie({ id: user.id, role: user.role }, remember ?? false);
     }
 
     // Get redirect URL from form data if it exists
@@ -150,8 +158,6 @@ export async function loginAction(
       message: "An error occurred while logging in",
       errors: {},
     };
-  } finally {
-    await db.$disconnect();
   }
 }
 
@@ -182,7 +188,11 @@ export async function updateSecurityQuestion(
       return { success: false, error: "Failed to update user" };
     }
 
-    await setAuthCookie(userId, true);
+    // You need to fetch the user's role to pass to setAuthCookie
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (user) {
+      await setAuthCookie({ id: userId, role: user.role }, true);
+    }
 
     return { success: true };
   } catch (error: any) {
@@ -191,8 +201,6 @@ export async function updateSecurityQuestion(
       success: false,
       error: error.message || "Failed to update security question",
     };
-  } finally {
-    await db.$disconnect();
   }
 }
 
@@ -390,26 +398,12 @@ export async function forgotPasswordAction(
           | "reset"
           | undefined) || "username",
     };
-  } finally {
-    await db.$disconnect();
   }
 }
 
 export async function logoutAction() {
   try {
     const cookieStore = await cookies();
-    const userId = cookieStore.get("auth-session")?.value;
-
-    if (userId) {
-      // Insert logout activity log if user ID exists
-      await db.systemLogs.create({
-        data: {
-          userId,
-          action: "logout",
-          details: "User logged out",
-        },
-      });
-    }
 
     // Clear the session cookie
     cookieStore.delete("auth-session");
@@ -425,8 +419,6 @@ export async function logoutAction() {
       success: false,
       message: "An error occurred while logging out",
     };
-  } finally {
-    await db.$disconnect();
   }
 }
 
@@ -467,8 +459,6 @@ export async function createUserAccount(
     return {
       error: "Failed to create user account",
     };
-  } finally {
-    await db.$disconnect();
   }
 }
 
@@ -514,8 +504,6 @@ export async function updateUserAccount(
     return {
       error: "Failed to update user account",
     };
-  } finally {
-    await db.$disconnect();
   }
 }
 
@@ -1398,3 +1386,287 @@ export async function assignCommittee(formData: FormData) {
 
   return { success: true };
 }
+
+export async function getDashboardStats() {
+  const now = new Date();
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  // 📊 Total SK Members
+  const currentMembers = await db.user.count({
+    where: {
+      role: "SK_OFFICIAL",
+      isActive: true,
+      createdAt: { gte: startOfThisMonth },
+    },
+  });
+  const previousMembers = await db.user.count({
+    where: {
+      role: "SK_OFFICIAL",
+      isActive: true,
+      createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+    },
+  });
+  const membersTrend = calcTrend(currentMembers, previousMembers);
+  const membersInsights = generateInsights(
+    "Total SK Members",
+    membersTrend.percentage,
+    membersTrend.trending as "up" | "down"
+  );
+
+  // 📊 Active Programs
+  const currentPrograms = await db.projectProposal.count({
+    where: { status: "In Progress", createdAt: { gte: startOfThisMonth } },
+  });
+  const previousPrograms = await db.projectProposal.count({
+    where: {
+      status: "In Progress",
+      createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+    },
+  });
+  const programsTrend = calcTrend(currentPrograms, previousPrograms);
+  const programsInsights = generateInsights(
+    "Active Programs",
+    programsTrend.percentage,
+    programsTrend.trending as "up" | "down"
+  );
+
+  // 📊 Budget Utilization
+  const totalBudget = await db.projectProposal.aggregate({
+    _sum: { budget: true },
+  });
+  const approvedBudget = await db.projectProposal.aggregate({
+    _sum: { budget: true },
+    where: { status: "Approved" },
+  });
+
+  const utilization =
+    totalBudget._sum.budget && approvedBudget._sum.budget
+      ? (approvedBudget._sum.budget / totalBudget._sum.budget) * 100
+      : 0;
+
+  // Assume last month’s utilization ~ proportional to last month’s approvals
+  const lastMonthApproved = await db.projectProposal.aggregate({
+    _sum: { budget: true },
+    where: {
+      status: "Approved",
+      createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+    },
+  });
+  const lastMonthUtilization = totalBudget._sum.budget
+    ? ((lastMonthApproved._sum.budget || 0) / totalBudget._sum.budget) * 100
+    : 0;
+
+  const budgetTrend = calcTrend(utilization, lastMonthUtilization);
+  const budgetInsights = generateInsights(
+    "Budget Utilization",
+    budgetTrend.percentage,
+    budgetTrend.trending as "up" | "down"
+  );
+
+  // 📊 Upcoming Events
+  const currentEvents = await db.events.count({
+    where: { startDate: { gte: now.toISOString().split("T")[0] } },
+  });
+  const previousEvents = await db.events.count({
+    where: {
+      startDate: {
+        gte: startOfLastMonth.toISOString().split("T")[0],
+        lt: startOfThisMonth.toISOString().split("T")[0],
+      },
+    },
+  });
+  const eventsTrend = calcTrend(currentEvents, previousEvents);
+  const eventsInsights = generateInsights(
+    "Upcoming Events",
+    eventsTrend.percentage,
+    eventsTrend.trending as "up" | "down"
+  );
+
+  return [
+    {
+      title: "Total SK Members",
+      data: currentMembers,
+      trending: membersTrend.trending as "up" | "down",
+      percentage: membersTrend.percentage,
+      description: membersInsights.description,
+      recommendation: membersInsights.recommendation,
+    },
+    {
+      title: "Active Programs",
+      data: currentPrograms,
+      trending: programsTrend.trending as "up" | "down",
+      percentage: programsTrend.percentage,
+      description: programsInsights.description,
+      recommendation: programsInsights.recommendation,
+    },
+    {
+      title: "Budget Utilization",
+      data: `${utilization.toFixed(1)}%`,
+      trending: budgetTrend.trending as "up" | "down",
+      percentage: budgetTrend.percentage,
+      description: budgetInsights.description,
+      recommendation: budgetInsights.recommendation,
+    },
+    {
+      title: "Upcoming Events",
+      data: currentEvents,
+      trending: eventsTrend.trending as "up" | "down",
+      percentage: eventsTrend.percentage,
+      description: eventsInsights.description,
+      recommendation: eventsInsights.recommendation,
+    },
+  ];
+}
+
+export async function createBudgetDistribution(
+  data: BudgetDistributionFormValues,
+  userId: string,
+  barangay: string
+) {
+  try {
+    const validatedData = budgetDistributionSchema.parse(data);
+
+    const existingDistribution = await db.budgetDistribution.findFirst({
+      where: {
+        allocated: validatedData.allocated,
+        year: validatedData.year,
+        barangay,
+      },
+    });
+
+    if (existingDistribution) {
+      return {
+        error:
+          "A budget distribution for this committee and year already exists.",
+      };
+    }
+
+    const budgetDistribution = await db.budgetDistribution.create({
+      data: {
+        ...validatedData,
+        createdBy: userId,
+        barangay,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "createBudgetDistribution",
+        details: `Budget distribution "${budgetDistribution.allocated}" created by user ${userId}`,
+      },
+    });
+
+    return budgetDistribution;
+  } catch (error) {
+    console.error("Error creating budget distribution:", error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to create budget distribution.");
+  }
+}
+
+export async function updateBudgetDistribution(
+  id: string,
+  data: BudgetDistributionFormValues,
+  userId: string,
+  barangay: string
+) {
+  try {
+    const validatedData = budgetDistributionSchema.parse(data);
+    const existingDistribution = await db.budgetDistribution.findUnique({
+      where: { id },
+    });
+
+    if (!existingDistribution || existingDistribution.createdBy !== userId) {
+      throw new Error("Unauthorized to update this distribution.");
+    }
+
+    const isThereDistribution = await db.budgetDistribution.findFirst({
+      where: {
+        allocated: validatedData.allocated,
+        year: validatedData.year,
+        barangay,
+      },
+    });
+
+    if (isThereDistribution) {
+      return {
+        error:
+          "A budget distribution for this committee and year already exists.",
+      };
+    }
+
+    const updatedDistribution = await db.budgetDistribution.update({
+      where: { id },
+      data: {
+        ...validatedData,
+        barangay,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "updateBudgetDistribution",
+        details: `Budget distribution "${updatedDistribution.allocated}" updated by user ${userId}`,
+      },
+    });
+
+    return updatedDistribution;
+  } catch (error) {
+    console.error(`Error updating budget distribution with ID ${id}:`, error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to update budget distribution.");
+  }
+}
+
+export const approveBudgetDistribution = async (id: string) => {
+  try {
+    const distribution = await db.budgetDistribution.findUnique({
+      where: { id },
+    });
+    if (!distribution) {
+      return { error: "Budget distribution not found." };
+    }
+    await db.budgetDistribution.update({
+      where: { id },
+      data: {
+        isApproved: true,
+      },
+    });
+    return { message: "Budget distribution approved successfully." };
+  } catch (error) {
+    console.error(`Error approving budget distribution with ID ${id}:`, error);
+    throw new Error("Failed to approve budget distribution.");
+  }
+};
+
+export const rejectBudgetDistribution = async (id: string) => {
+  try {
+    const distribution = await db.budgetDistribution.findUnique({
+      where: { id },
+    });
+    if (!distribution) {
+      return { error: "Budget distribution not found." };
+    }
+    await db.budgetDistribution.update({
+      where: { id },
+      data: {
+        isApproved: false,
+      },
+    });
+    return { message: "Budget distribution rejected successfully." };
+  } catch (error) {
+    console.error(`Error rejecting budget distribution with ID ${id}:`, error);
+    throw new Error("Failed to reject budget distribution.");
+  }
+};

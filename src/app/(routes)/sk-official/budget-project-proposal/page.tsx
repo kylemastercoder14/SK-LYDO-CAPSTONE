@@ -5,8 +5,6 @@ import db from "@/lib/db";
 import { columns } from "./_components/columns";
 import ProjectProposalModal from "./_components/project-proposal-modal";
 import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Page = async () => {
@@ -25,11 +23,6 @@ const Page = async () => {
     },
   });
 
-  if (!user) {
-    toast.loading("Logging out due to inactivity...");
-    redirect("/sign-in");
-  }
-
   return (
     <div className="p-5">
       <div className="flex items-center justify-between">
@@ -37,20 +30,27 @@ const Page = async () => {
           title="Budget & Project Proposals"
           description="View and manage budget & project proposals for your barangay."
         />
-        <ProjectProposalModal userId={user?.id} />
+        <ProjectProposalModal userId={user?.id ?? ""} />
       </div>
       <div className="mt-5">
-        <Tabs defaultValue="pending">
+        <Tabs defaultValue="all">
           <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="pending">Pending Proposal</TabsTrigger>
             <TabsTrigger value="approved">Approved Proposal</TabsTrigger>
             <TabsTrigger value="rejected">Rejected Proposal</TabsTrigger>
             <TabsTrigger value="inactive">Inactive Proposal</TabsTrigger>
           </TabsList>
+          <TabsContent value="all">
+            <DataTable
+              columns={columns}
+              data={data}
+            />
+          </TabsContent>
           <TabsContent value="approved">
             <DataTable
               columns={columns}
-              data={data.filter((report) => report.status === "Approved")}
+              data={data.filter((report) => report.status === "In Progress" || report.status === "Completed")}
             />
           </TabsContent>
           <TabsContent value="pending">

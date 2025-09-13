@@ -4,15 +4,14 @@ import { AppSidebar } from "./_components/app-sidebar";
 import { SiteHeader } from "./_components/site-header";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { OfficialType } from '@prisma/client';
+import { OfficialType, UserRole } from '@prisma/client';
 import ActiveStatus from './_components/active-status';
 
 const SkOfficialLayout = async ({children}: {children: React.ReactNode}) => {
   const user = await getServerSession();
 
-  // If no session exists, redirect to sign-in
   if (!user) {
-	redirect("/sign-in");
+    return <p>Loading...</p>; // middleware already handles auth redirect
   }
 
   // Optional: Verify user role if needed
@@ -31,7 +30,7 @@ const SkOfficialLayout = async ({children}: {children: React.ReactNode}) => {
 	  <AppSidebar variant="inset" officialType={user.officialType as OfficialType} barangay={user.barangay as string} />
 	  <SidebarInset>
 		<ActiveStatus userId={user.id} />
-		<SiteHeader user={user} />
+		<SiteHeader user={{ ...user, role: user.role as UserRole }} />
 		{children}
 	  </SidebarInset>
 	</SidebarProvider>

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import db from "@/lib/db";
 import { toZonedTime } from "date-fns-tz";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
     // Check if request has content
@@ -80,8 +83,6 @@ export async function POST(request: Request) {
       { message: "Internal Server Error" },
       { status: 500 }
     );
-  } finally {
-    await db.$disconnect();
   }
 }
 

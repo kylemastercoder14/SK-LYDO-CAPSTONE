@@ -11,7 +11,6 @@ export type FormState = {
   errors?: {
     username?: string[];
     password?: string[];
-    role?: string[];
     remember?: string[];
   };
   message: string;
@@ -55,11 +54,11 @@ export function getGreeting() {
   const hour = new Date().getHours();
 
   if (hour < 12) {
-    return "Good Morning";
+    return "Good morning";
   } else if (hour < 18) {
-    return "Good Afternoon";
+    return "Good afternoon";
   } else {
-    return "Good Evening";
+    return "Good evening";
   }
 }
 
@@ -211,3 +210,84 @@ export const calculateMetrics = (
     trend,
   };
 };
+
+export function calcTrend(current: number, previous: number) {
+  if (previous === 0 && current === 0) {
+    return { trending: "up", percentage: "0%" };
+  }
+  if (previous === 0) {
+    return { trending: "up", percentage: "+100%" };
+  }
+
+  const change = ((current - previous) / previous) * 100;
+  return {
+    trending: change >= 0 ? "up" : "down",
+    percentage: `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`,
+  };
+}
+
+export function generateInsights(
+  title: string,
+  percentage: string,
+  trend: "up" | "down"
+) {
+  switch (title) {
+    case "Total SK Members":
+      return trend === "up"
+        ? {
+            description: `Membership increased by ${percentage} this month.`,
+            recommendation:
+              "Continue outreach and registration efforts to sustain growth.",
+          }
+        : {
+            description: `Membership decreased by ${percentage}.`,
+            recommendation:
+              "Conduct barangay campaigns to encourage more youth to register.",
+          };
+
+    case "Active Programs":
+      return trend === "up"
+        ? {
+            description: `Program count rose by ${percentage}.`,
+            recommendation:
+              "Monitor program quality to ensure effectiveness and youth participation.",
+          }
+        : {
+            description: `Programs decreased by ${percentage}.`,
+            recommendation:
+              "Assess reasons for decline and initiate new youth-focused activities.",
+          };
+
+    case "Budget Utilization":
+      return trend === "up"
+        ? {
+            description: `Budget utilization improved by ${percentage}.`,
+            recommendation:
+              "Ensure projects are aligned with youth needs and monitor spending efficiency.",
+          }
+        : {
+            description: `Budget utilization dropped by ${percentage}.`,
+            recommendation:
+              "Review pending proposals and accelerate fund allocation.",
+          };
+
+    case "Upcoming Events":
+      return trend === "up"
+        ? {
+            description: `Upcoming events increased by ${percentage}.`,
+            recommendation:
+              "Assign committees early to handle logistics and maximize turnout.",
+          }
+        : {
+            description: `Fewer events planned (${percentage} decrease).`,
+            recommendation:
+              "Plan additional community events to sustain engagement.",
+          };
+
+    default:
+      return {
+        description: `Performance changed by ${percentage}.`,
+        recommendation: "Review performance indicators and adjust strategies.",
+      };
+  }
+}

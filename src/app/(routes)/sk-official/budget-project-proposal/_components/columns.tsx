@@ -82,6 +82,15 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
         </div>
       );
     },
+    filterFn: (row, columnId, filterValue) => {
+      const title = row.original.title.toLowerCase();
+      const id = row.original.id.toLowerCase();
+      const search = filterValue.toLowerCase();
+
+      return title.includes(search) || id.includes(search);
+    },
+    enableSorting: false,
+    enableHiding: false,
   },
   {
     accessorKey: "budget",
@@ -157,9 +166,13 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
       let badgeColorClass = "";
 
       switch (status) {
-        case "Approved":
+        case "Completed":
           badgeVariant = "default";
           badgeColorClass = "bg-green-100 text-green-700 hover:bg-green-200";
+          break;
+          case "In Progress":
+          badgeVariant = "default";
+          badgeColorClass = "bg-blue-100 text-blue-700 hover:bg-blue-200";
           break;
         case "Pending":
           badgeVariant = "secondary";

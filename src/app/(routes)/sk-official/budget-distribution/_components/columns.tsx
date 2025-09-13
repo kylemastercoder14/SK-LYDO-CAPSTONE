@@ -1,50 +1,50 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckIcon, ChevronsUpDown, CopyIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
-import { BudgetReportsProps } from "@/types/interface";
 import CellAction from "./cell-action";
+import { BudgetDistribution } from "@prisma/client";
+import { Badge } from "@/components/ui/badge";
 
-export const columns: ColumnDef<BudgetReportsProps>[] = [
+export const columns: ColumnDef<BudgetDistribution>[] = [
   {
-    accessorKey: "projectName",
+    accessorKey: "committee",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Budget Name
+          Committee
           <ChevronsUpDown className="h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const budgetName = row.original.name;
-      const user = row.original;
+      const committeeName = row.original.allocated;
+      const raw = row.original;
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const [copied, setCopied] = useState(false);
       return (
         <div className="ml-2.5">
-          <span>{budgetName}</span>
+          <span>{committeeName}</span>
           <div
-            title={user.user?.id}
+            title={raw.id}
             className="text-xs cursor-pointer text-primary gap-2 flex items-center"
           >
             <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
-              {user.user?.id}
+              {raw.id}
             </span>
             {copied ? (
               <CheckIcon className="size-3 text-green-600" />
             ) : (
               <CopyIcon
                 onClick={() => {
-                  navigator.clipboard.writeText(user.user?.id || "");
-                  toast.success("User ID copied to clipboard");
+                  navigator.clipboard.writeText(raw.id || "");
+                  toast.success("ID copied to clipboard");
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
@@ -56,49 +56,90 @@ export const columns: ColumnDef<BudgetReportsProps>[] = [
       );
     },
     filterFn: (row, columnId, filterValue) => {
-      const title = row.original.name.toLowerCase();
+      const allocated = row.original.allocated.toLowerCase();
       const id = row.original.id.toLowerCase();
       const search = filterValue.toLowerCase();
 
-      return title.includes(search) || id.includes(search);
+      return allocated.includes(search) || id.includes(search);
     },
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: "fileSize",
+    accessorKey: "spent",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          File Size
+          Budget Spent
           <ChevronsUpDown className="h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const fileSize = row.original.fileSize;
-      return <span className="ml-2.5">{fileSize}</span>;
+      const spent = row.original.spent;
+      return <span className="ml-2.5">₱{spent.toLocaleString()}</span>;
     },
   },
   {
-    accessorKey: "fileType",
+    accessorKey: "year",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          File Type
+          Year
           <ChevronsUpDown className="h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const fileType = row.original.fileType;
-      return <span className="ml-2.5">{fileType}</span>;
+      const year = row.original.year;
+      return <span className="ml-2.5">{year}</span>;
+    },
+  },
+  {
+    accessorKey: "isApproved",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ChevronsUpDown className="h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const status = row.original.isApproved;
+      let badgeVariant: "default" | "secondary" | "destructive" | "outline" =
+        "default";
+      let badgeColorClass = "";
+
+      switch (status) {
+        case true:
+          badgeVariant = "default";
+          badgeColorClass = "bg-green-100 text-green-700 hover:bg-green-200";
+          break;
+        case false:
+          badgeVariant = "destructive";
+          badgeColorClass = "bg-red-100 text-red-700 hover:bg-red-200";
+          break;
+        default:
+          badgeVariant = "outline";
+          badgeColorClass = "bg-gray-100 text-gray-700 hover:bg-gray-200";
+          break;
+      }
+
+      return (
+        <Badge className={`ml-2.5 ${badgeColorClass}`} variant={badgeVariant}>
+          {status ? "Approved" : "Pending"}
+        </Badge>
+      );
     },
   },
   {
@@ -109,7 +150,7 @@ export const columns: ColumnDef<BudgetReportsProps>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Date Uploaded
+          Date Submitted
           <ChevronsUpDown className="h-4 w-4" />
         </Button>
       );
@@ -118,55 +159,6 @@ export const columns: ColumnDef<BudgetReportsProps>[] = [
       const date = new Date(row.original.createdAt);
       return <span className="ml-2.5">{date.toLocaleDateString()}</span>;
     },
-  },
-  {
-    accessorKey: "user",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Uploaded By
-          <ChevronsUpDown className="h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const user = row.original;
-
-      // Handle cases where firstName or lastName might be null/undefined
-      const firstName = user.user?.firstName || "";
-      const lastName = user.user?.lastName || "";
-      const fullName = `${firstName} ${lastName}`.trim();
-      const displayName = fullName || user.user?.username || "Unknown User";
-
-      return (
-        <div className="flex items-center gap-2 ml-2.5">
-          <Avatar className="rounded-lg">
-            <AvatarImage
-              src={user.user?.image || ""}
-              alt={user.user?.username || ""}
-            />
-            <AvatarFallback className="rounded-lg">
-              {(user.user?.username || "U").charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col">
-            <span className="font-semibold">{displayName}</span>
-          </div>
-        </div>
-      );
-    },
-    filterFn: (row, columnId, filterValue) => {
-      const fileName = (row.original.name ?? "").toLowerCase();
-      const id = (row.original.uploadedBy ?? "").toLowerCase();
-      const search = filterValue.toLowerCase();
-
-      return fileName.includes(search) || id.includes(search);
-    },
-    enableSorting: false,
-    enableHiding: false,
   },
   {
     id: "actions",

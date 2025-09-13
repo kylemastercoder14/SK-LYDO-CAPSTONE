@@ -321,35 +321,6 @@ const Page = () => {
                     )}
                   </div>
 
-                  {/* Role Field */}
-                  <div className="grid gap-3">
-                    <Label htmlFor="role">Role</Label>
-                    <Select name="role" defaultValue="">
-                      <SelectTrigger
-                        id="role"
-                        className={cn(
-                          "rounded-none w-full",
-                          state?.errors?.role && "border-red-500"
-                        )}
-                      >
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="SK_FEDERATION">
-                          SK Federation
-                        </SelectItem>
-                        <SelectItem value="LYDO">LYDO</SelectItem>
-                        <SelectItem value="SK_OFFICIAL">SK Official</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {state?.errors?.role && (
-                      <p className="text-sm text-red-500">
-                        {state.errors.role[0]}
-                      </p>
-                    )}
-                  </div>
-
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="remember"

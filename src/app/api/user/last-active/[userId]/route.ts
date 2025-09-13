@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
@@ -46,7 +49,5 @@ export async function GET(
       { message: "Internal Server Error" },
       { status: 500 }
     );
-  } finally {
-    await db.$disconnect();
   }
 }

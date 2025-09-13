@@ -1,87 +1,117 @@
-"use client"
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Pie, PieChart } from "recharts"
+import { LabelList, Pie, PieChart } from "recharts";
 
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
+import { BudgetDistribution } from "@prisma/client";
 
-export const description = "A pie chart with a label"
+// 🎨 Assign fixed colors per committee (same as before)
+const chartConfig: ChartConfig & {
+  [key: string]: { label: string; color?: string };
+} = {
+  Health: { label: "Health", color: "#1f77b6" },
+  Education: { label: "Education", color: "#fe9900" },
+  "Economic Empowerment": { label: "Economic Empowerment", color: "#2ba02d" },
+  "Social Inclusion & Equity": { label: "Social Inclusion & Equity", color: "#f5cf46" },
+  "Peace & Security": { label: "Peace & Security", color: "#e54b4a" },
+  Environment: { label: "Environment", color: "#354a5f" },
+  Governance: { label: "Governance", color: "#9866bd" },
+  "Active Citizenship": { label: "Active Citizenship", color: "#8c564c" },
+  "Other MOOE": { label: "Other MOOE", color: "#0199cb" },
+};
 
-const chartData = [
-  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-  { browser: "firefox", visitors: 187, fill: "var(--color-firefox)" },
-  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
-  { browser: "other", visitors: 90, fill: "var(--color-other)" },
-]
+// ✅ Custom Tooltip with currency + percentage
+const CustomTooltip = ({ active, payload, total }: any) => {
+  if (!active || !payload || !payload.length) return null;
 
-const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  chrome: {
-    label: "Chrome",
-    color: "var(--chart-1)",
-  },
-  safari: {
-    label: "Safari",
-    color: "var(--chart-2)",
-  },
-  firefox: {
-    label: "Firefox",
-    color: "var(--chart-3)",
-  },
-  edge: {
-    label: "Edge",
-    color: "var(--chart-4)",
-  },
-  other: {
-    label: "Other",
-    color: "var(--chart-5)",
-  },
-} satisfies ChartConfig
+  const data = payload[0].payload;
+  const percent = ((data.amount / total) * 100).toFixed(1);
 
-export function BudgetPieChart() {
+  return (
+    <div className="rounded-md border bg-background p-2 shadow-sm">
+      <p className="text-sm font-medium">{data.committee}</p>
+      <p className="text-sm text-muted-foreground">
+        ₱{data.amount.toLocaleString()} ({percent}%)
+      </p>
+    </div>
+  );
+};
+
+export function BudgetPieChart({
+  budgetDistribution,
+}: {
+  budgetDistribution: BudgetDistribution[];
+}) {
+  const currentYear = new Date().getFullYear().toString();
+
+  // 🔄 Transform DB data → chartData
+  const chartData = budgetDistribution
+    .filter((b) => b.isApproved && b.year === currentYear)
+    .map((b) => ({
+      committee: b.allocated,
+      amount: b.spent,
+      fill: chartConfig[b.allocated]?.color ?? "#ccc", // fallback color
+    }));
+
+  const total = chartData.reduce((sum, entry) => sum + entry.amount, 0);
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Approximately Fund Distribution</CardTitle>
+        <CardTitle>Budget Distribution {currentYear}</CardTitle>
         <CardDescription>
-          Showing budget allocation for various committees and projects.
+          Showing fund allocation per committee annually.
         </CardDescription>
       </CardHeader>
+
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
-          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto aspect-square max-h-[300px] pb-0"
+          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto w-full aspect-square max-h-[350px] pb-0"
         >
           <PieChart>
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <Pie data={chartData} dataKey="visitors" label nameKey="browser" />
+            <ChartTooltip content={<CustomTooltip total={total} />} />
+            <Pie
+              data={chartData}
+              dataKey="amount"
+              nameKey="committee"
+              label={({ value }) =>
+                value !== undefined ? `₱${value.toLocaleString()}` : ""
+              }
+            />
+            <LabelList
+              dataKey="committee"
+              className="fill-background"
+              stroke="none"
+              fontSize={12}
+              formatter={(label) =>
+                typeof label === "string"
+                  ? chartConfig[label]?.label ?? label
+                  : label
+              }
+            />
+
+            <ChartLegend
+              content={<ChartLegendContent nameKey="committee" />}
+              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 mt-5 *:justify-start"
+            />
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 leading-none font-medium">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
-  )
+  );
 }
