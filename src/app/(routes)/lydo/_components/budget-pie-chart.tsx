@@ -90,7 +90,7 @@ export function BudgetPieChart({
               dataKey="amount"
               nameKey="committee"
               label={({ value }) =>
-                value !== undefined ? `₱${value.toLocaleString()}` : ""
+                value != null ? `₱${value.toLocaleString()}` : ""
               }
             />
             <LabelList
