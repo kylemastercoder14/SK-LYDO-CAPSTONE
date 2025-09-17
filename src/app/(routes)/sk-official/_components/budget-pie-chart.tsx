@@ -26,7 +26,10 @@ const chartConfig: ChartConfig & {
   Health: { label: "Health", color: "#1f77b6" },
   Education: { label: "Education", color: "#fe9900" },
   "Economic Empowerment": { label: "Economic Empowerment", color: "#2ba02d" },
-  "Social Inclusion & Equity": { label: "Social Inclusion & Equity", color: "#f5cf46" },
+  "Social Inclusion & Equity": {
+    label: "Social Inclusion & Equity",
+    color: "#f5cf46",
+  },
   "Peace & Security": { label: "Peace & Security", color: "#e54b4a" },
   Environment: { label: "Environment", color: "#354a5f" },
   Governance: { label: "Governance", color: "#9866bd" },
@@ -90,7 +93,7 @@ export function BudgetPieChart({
               dataKey="amount"
               nameKey="committee"
               label={({ value }) =>
-                value !== undefined ? `₱${value.toLocaleString()}` : ""
+                value != null ? `₱${value.toLocaleString()}` : ""
               }
             />
             <LabelList
