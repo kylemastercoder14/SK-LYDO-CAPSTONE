@@ -135,16 +135,26 @@
   background-position: center;
   background-repeat: no-repeat;
   width: 100%;
-
-  /* Mobile first approach */
-  min-height: 400px;
   margin-top: 90px;
-  background-size: cover; /* Ensures image covers area on small screens */
 
-  /* Tablet sizes (768px and up) */
+  /* Mobile first */
+  min-height: 400px;
+  background-size: cover;
+
+  /* Small mobile (375px) */
+  @media (max-width: 375px) {
+    min-height: 350px;
+  }
+
+  /* Medium mobile (425px) */
+  @media (min-width: 376px) and (max-width: 425px) {
+    min-height: 380px;
+  }
+
+  /* Tablet (768px and up) */
   @media (min-width: 768px) {
     min-height: 600px;
-    background-size: contain; /* Shows full image without cropping */
+    background-size: contain;
   }
 
   /* Small desktop (1024px and up) */
@@ -152,10 +162,16 @@
     min-height: 720px;
   }
 
-  /* Large desktop (1280px and up) */
+  /* Desktop (1280px and up) */
   @media (min-width: 1280px) {
     min-height: 920px;
-    background-size: 1920px 920px; /* Your original exact size */
+    background-size: cover;
+  }
+
+  /* Large desktop (1440px and up) */
+  @media (min-width: 1440px) {
+    min-height: 1000px;
+    background-size: cover;
   }
 }
 

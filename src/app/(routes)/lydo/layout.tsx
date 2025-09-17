@@ -26,7 +26,7 @@ const LydoLayout = async ({children}: {children: React.ReactNode}) => {
 		} as React.CSSProperties
 	  }
 	>
-	  <AppSidebar variant="inset" barangay={user.barangay as string} />
+	  <AppSidebar variant="inset" />
 	  <SidebarInset>
 		<SiteHeader user={user} />
 		{children}
