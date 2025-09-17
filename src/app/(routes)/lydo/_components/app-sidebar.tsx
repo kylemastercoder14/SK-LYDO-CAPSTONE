@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  IconBriefcase,
   IconCopyCheck,
   IconDashboard,
   IconFolderCheck,
@@ -27,13 +28,13 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Budget Report",
-      url: "/lydo/budget-report",
+      title: "Budget Reports",
+      url: "/lydo/budget-reports",
       icon: IconWallet,
     },
     {
-      title: "Project Management",
-      url: "/lydo/project-management",
+      title: "Project Reports",
+      url: "/lydo/project-reports",
       icon: IconFolderCheck,
     },
     {
@@ -41,14 +42,16 @@ const data = {
       url: "/lydo/approved-budget-project",
       icon: IconCopyCheck,
     },
+    {
+      title: "Annual Report",
+      url: "/lydo/annual-report",
+      icon: IconBriefcase,
+    },
   ],
 };
 
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  barangay: string;
-}
 
-export function AppSidebar({ barangay, ...props }: AppSidebarProps) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -74,7 +77,7 @@ export function AppSidebar({ barangay, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain barangay={barangay} items={data.navMain} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
     </Sidebar>
   );

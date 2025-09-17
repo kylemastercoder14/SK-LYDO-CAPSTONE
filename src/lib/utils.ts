@@ -291,3 +291,60 @@ export function generateInsights(
       };
   }
 }
+
+export function normalizeBarangay(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, "-") // spaces → dash
+    .replace(/[().]/g, "") // remove parentheses + dots
+    .replace(/-+/g, "-"); // collapse multiple dashes
+}
+
+export function extractFileExtension(fileUrl: string): string {
+  if (!fileUrl) return "";
+  try {
+    const fileName = fileUrl.split("/").pop() || "";
+    const parts = fileName.split(".");
+    return parts.length > 1 ? parts.pop()!.toLowerCase() : "";
+  } catch {
+    return "";
+  }
+}
+
+export function fileIcon(fileTypeOrUrl: string) {
+  const ext = fileTypeOrUrl.includes(".")
+    ? extractFileExtension(fileTypeOrUrl)
+    : fileTypeOrUrl.toLowerCase();
+
+  switch (ext) {
+    case "pdf":
+      return "/pdf-icon.svg";
+    case "doc":
+    case "docx":
+      return "/docs-icon.svg";
+    case "xls":
+    case "xlsx":
+    case "csv":
+      return "/xlsx-icon.svg";
+    case "png":
+    case "jpg":
+    case "jpeg":
+    case "gif":
+    case "webp":
+      return "/img-icon.svg";
+    case "ppt":
+    case "pptx":
+      return "/ppt-icon.svg";
+    default:
+      return "/default-icon.png";
+  }
+}
+
+export function extractFileName(fileUrl: string): string {
+  if (!fileUrl) return "";
+  try {
+    return fileUrl.split("/").pop() || "";
+  } catch {
+    return "";
+  }
+}
