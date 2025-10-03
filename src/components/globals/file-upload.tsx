@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { cn, ensureBlob } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   UploadCloud,
   Trash,
@@ -15,6 +15,7 @@ import {
   FileQuestion,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { uploadToSupabase } from "@/lib/upload";
 
 const SingleFileUpload = ({
   onFileUpload,
@@ -22,7 +23,6 @@ const SingleFileUpload = ({
   className,
   disabled,
   bucket = "assets",
-  folder,
   maxFileSizeMB = 5, // New prop for configurable max file size
   acceptedFileTypes = {
     // New prop for configurable accepted file types
@@ -52,12 +52,11 @@ const SingleFileUpload = ({
     "text/csv": [".csv"],
   },
 }: {
-  onFileUpload: (url: string) => void; // Renamed for generality
+  onFileUpload: (file: { url: string; size: number; type: string }) => void;
   defaultValue?: string;
   className?: string;
   disabled?: boolean;
   bucket?: string;
-  folder?: string;
   maxFileSizeMB?: number; // New prop type
   acceptedFileTypes?: Record<string, string[]>; // New prop type
 }) => {
@@ -97,46 +96,6 @@ const SingleFileUpload = ({
     }
   }, [defaultValue]);
 
-  const uploadToSupabase = async (file: File) => {
-    const supabase = createClient();
-    const client = await supabase;
-
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()
-      .toString(36)
-      .substring(2, 15)}.${fileExt}`;
-    const filePath = folder ? `${folder}/${fileName}` : fileName;
-
-    try {
-      setIsUploading(true);
-      const blob = await ensureBlob(file);
-
-      const { data: uploadData, error: uploadError } = await client.storage
-        .from(bucket)
-        .upload(filePath, blob, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type,
-        });
-
-      if (uploadError) throw uploadError;
-      if (!uploadData) throw new Error("Upload failed: No data returned");
-
-      const {
-        data: { publicUrl },
-      } = client.storage.from(bucket).getPublicUrl(uploadData.path);
-
-      if (!publicUrl) throw new Error("Could not generate public URL");
-
-      return { url: publicUrl };
-    } catch (error) {
-      console.error("Upload error:", error);
-      throw error;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const { getRootProps, getInputProps } = useDropzone({
     accept: acceptedFileTypes, // Use the new prop here
     maxFiles: 1,
@@ -157,9 +116,16 @@ const SingleFileUpload = ({
 
       try {
         toast.loading("Uploading file...");
-        const { url } = await uploadToSupabase(file);
+        const { url } = await uploadToSupabase(file, {
+          bucket: "assets",
+          onUploading: setIsUploading,
+        });
         setFileUrl(url);
-        onFileUpload(url); // Call onFileUpload
+        onFileUpload({
+          url,
+          size: file.size,
+          type: file.type || "application/pdf",
+        });
         toast.success("File uploaded successfully!");
       } catch (error) {
         console.error("File upload error:", error);
@@ -199,7 +165,7 @@ const SingleFileUpload = ({
 
     setFileUrl("");
     setFileType(null); // Clear file type on removal
-    onFileUpload(""); // Call onFileUpload
+    onFileUpload({ url: "", size: 0, type: "" });
   };
 
   // Helper function to render a file icon based on file type

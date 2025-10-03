@@ -153,7 +153,7 @@ model Events {
   id          String   @id @default(uuid())
   name        String
   description String
-  thumbnail   String
+  fileUrl     String
   barangay    String
   startDate   String
   endDate     String

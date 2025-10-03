@@ -10,7 +10,7 @@ const BudgetReportModal = ({ userId }: { userId: string }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   return (
     <>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+      <Modal className='!max-w-4xl' isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <BudgetReportForm
           userId={userId}
           initialData={null}

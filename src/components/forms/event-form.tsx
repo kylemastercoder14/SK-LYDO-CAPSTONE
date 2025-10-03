@@ -10,31 +10,35 @@ import { useRouter } from "next/navigation";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { eventSchema } from "@/validators";
 import Heading from "@/components/globals/heading";
 import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { EventFormValues } from "@/types/types";
+import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/globals/rich-text-editor";
+import { convertHtmlToPdf } from "@/lib/utils";
+import { uploadToSupabase } from "@/lib/upload";
+import { createEvent, updateEvent } from "@/actions";
+import { toast } from "sonner";
 
 interface EventFormProps {
   initialData: Events | null;
   onClose?: () => void;
-  userId: string;
   barangay: string;
 }
 
 const EventForm: React.FC<EventFormProps> = ({
   initialData,
   onClose,
-  userId,
   barangay,
 }) => {
   const router = useRouter();
@@ -45,13 +49,18 @@ const EventForm: React.FC<EventFormProps> = ({
     defaultValues: initialData
       ? {
           ...initialData,
-          startDate: initialData.startDate ? String(initialData.startDate) : undefined,
-          endDate: initialData.endDate ? String(initialData.endDate) : undefined,
+          startDate: initialData.startDate
+            ? String(initialData.startDate)
+            : undefined,
+          endDate: initialData.endDate
+            ? String(initialData.endDate)
+            : undefined,
         }
       : {
           name: "",
-          description: "",
-          thumbnail: "",
+          content: "",
+          isManualTyping: true,
+          fileUrl: "",
           barangay: barangay,
           startDate: undefined,
           endDate: undefined,
@@ -59,26 +68,43 @@ const EventForm: React.FC<EventFormProps> = ({
   });
 
   const onSubmit = async (data: EventFormValues) => {
-    // try {
-    //   setLoading(true);
+    try {
+      setLoading(true);
 
-    //   if (initialData) {
-    //     await updateProjectProposal(initialData.id, data, userId);
-    //     toast.success("Event updated successfully! 🎉");
-    //   } else {
-    //     await createProjectProposal(data, userId);
-    //     toast.success("Event created successfully! ✨");
-    //   }
-    //   router.refresh();
-    //   onClose?.();
-    // } catch (error: any) {
-    //   toast.error("Something went wrong. Please try again. 😢");
-    //   console.error("Form submission error:", error);
-    // } finally {
-    //   setLoading(false);
-    // }
+      if (data.isManualTyping) {
+        // Use the enhanced PDF generation
+        const doc = convertHtmlToPdf(data.content || "", data.name);
 
-	console.log(data)
+        const pdfBlob = doc.output("blob");
+
+        const file = new File([pdfBlob], `${data.name}.pdf`, {
+          type: "application/pdf",
+        });
+
+        const { url: fileUrl } = await uploadToSupabase(file, {
+          bucket: "assets",
+          onUploading: setLoading,
+        });
+
+        data.fileUrl = fileUrl;
+      }
+
+      // Save to DB
+      if (initialData) {
+        await updateEvent(initialData.id, data, barangay);
+        toast.success("Event updated successfully! 🎉");
+      } else {
+        await createEvent(data, barangay);
+        toast.success("Event created successfully! ✨");
+      }
+      router.refresh();
+      onClose?.();
+    } catch (error: any) {
+      toast.error("Something went wrong. Please try again. 😢");
+      console.error("Form submission error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const title = initialData ? "Edit Event" : "Create Event";
@@ -95,6 +121,27 @@ const EventForm: React.FC<EventFormProps> = ({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="pb-4">
           <div className="grid grid-cols-1 gap-x-4 gap-y-5">
+            <FormField
+              control={form.control}
+              name="isManualTyping"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-1">
+                    <FormLabel>Manual Typing</FormLabel>
+                    <FormDescription>
+                      Enable this option if you prefer to manually type in the
+                      details instead of uploading a file.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             {/* Event Name Field */}
             <FormField
               control={form.control}
@@ -113,25 +160,6 @@ const EventForm: React.FC<EventFormProps> = ({
                 </FormItem>
               )}
             />
-            {/* Event Description Field */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      disabled={loading}
-                      placeholder="e.g., A brief description of the event"
-                      {...field}
-                      className="max-h-20"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">
               {/* Start date Field */}
               <FormField
@@ -141,7 +169,12 @@ const EventForm: React.FC<EventFormProps> = ({
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      TODO: Add a date picker component here
+                      <Input
+                        disabled={loading}
+                        type="datetime-local"
+                        placeholder="Select start date"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,32 +188,55 @@ const EventForm: React.FC<EventFormProps> = ({
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      TODO: Add a date picker component here
+                      <Input
+                        disabled={loading}
+                        type="datetime-local"
+                        placeholder="Select end date"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            {/* File URL Field */}
+            {/* Event Description Field */}
             <FormField
               control={form.control}
-              name="thumbnail"
+              name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Thumbnail</FormLabel>
+                  <FormLabel>Event Description</FormLabel>
                   <FormControl>
-                    <SingleFileUpload
-                      onFileUpload={field.onChange}
-                      defaultValue={field.value}
-                      bucket="assets"
-                      maxFileSizeMB={5}
+                    <RichTextEditor
+                      onChangeAction={field.onChange}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {!form.watch("isManualTyping") && (
+              <FormField
+                control={form.control}
+                name="fileUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>File URL</FormLabel>
+                    <FormControl>
+                      <SingleFileUpload
+                        onFileUpload={field.onChange}
+                        defaultValue={field.value}
+                        bucket="assets"
+                        maxFileSizeMB={5}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
           <div className="pt-6 space-x-2 flex items-center justify-end w-full">
             <Button

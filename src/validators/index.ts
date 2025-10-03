@@ -66,12 +66,44 @@ export const projectReportSchema = z.object({
   fileUrl: z.string().url({ message: "A valid file URL is required." }),
 });
 
-export const budgetReportSchema = z.object({
-  name: z.string().min(1, { message: "Project name is required." }),
-  fileSize: z.string().min(1, { message: "File size is required." }),
-  fileType: z.string().min(1, { message: "File type is required." }),
-  fileUrl: z.string().url({ message: "A valid file URL is required." }),
-});
+export const budgetReportSchema = z
+  .object({
+    name: z.string().min(1, { message: "Project name is required." }),
+    isManualTyping: z.boolean().default(false).optional(),
+    content: z.string().optional(),
+    fileSize: z.string().optional(),
+    fileType: z.string().optional(),
+    fileUrl: z.string().optional(), // keep it simple here
+  })
+  .superRefine((data, ctx) => {
+    if (data.isManualTyping) {
+      if (!data.content || data.content.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["content"],
+          message: "Content is required when manual typing is enabled.",
+        });
+      }
+    } else {
+      if (!data.fileUrl || data.fileUrl.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["fileUrl"],
+          message: "File upload is required when manual typing is disabled.",
+        });
+      } else {
+        try {
+          new URL(data.fileUrl); // validate proper URL only if it exists
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["fileUrl"],
+            message: "Invalid file URL",
+          });
+        }
+      }
+    }
+  });
 
 export const budgetDistributionSchema = z.object({
   allocated: z.string().min(1, { message: "Allocated is required." }),
@@ -79,16 +111,45 @@ export const budgetDistributionSchema = z.object({
   year: z.string().min(1, { message: "Year is required." }),
 });
 
-export const projectProposalSchema = z.object({
-  title: z.string().min(1, { message: "Project title is required." }),
-  description: z
-    .string()
-    .min(1, { message: "Project description is required." }),
-  budget: z.coerce
-    .number()
-    .min(0, { message: "Budget must be a positive number." }),
-  fileUrl: z.string().url({ message: "A valid file URL is required." }),
-});
+export const projectProposalSchema = z
+  .object({
+    title: z.string().min(1, { message: "Project title is required." }),
+    isManualTyping: z.boolean().default(false).optional(),
+    content: z.string().optional(),
+    budget: z.coerce
+      .number()
+      .min(0, { message: "Budget must be a positive number." }),
+    fileUrl: z.string().optional(), // keep it simple here
+  })
+  .superRefine((data, ctx) => {
+    if (data.isManualTyping) {
+      if (!data.content || data.content.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["content"],
+          message: "Content is required when manual typing is enabled.",
+        });
+      }
+    } else {
+      if (!data.fileUrl || data.fileUrl.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["fileUrl"],
+          message: "File upload is required when manual typing is disabled.",
+        });
+      } else {
+        try {
+          new URL(data.fileUrl); // validate proper URL only if it exists
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["fileUrl"],
+            message: "Invalid file URL",
+          });
+        }
+      }
+    }
+  });
 
 export const cbydpReportSchema = z.object({
   name: z.string().min(1, { message: "CBYDP name is required." }),
@@ -137,11 +198,42 @@ export const officialSchema = z.object({
     ),
 });
 
-export const eventSchema = z.object({
-  name: z.string().min(1, { message: "Event name is required." }),
-  description: z.string().min(1, { message: "Event description is required." }),
-  thumbnail: z.string().url({ message: "Thumbnail is required." }),
-  barangay: z.string().min(1, { message: "Barangay is required." }),
-  startDate: z.string().min(1, { message: "Start date is required." }),
-  endDate: z.string().min(1, { message: "End date is required." }),
-});
+export const eventSchema = z
+  .object({
+    name: z.string().min(1, { message: "Event name is required." }),
+    isManualTyping: z.boolean().default(false).optional(),
+    content: z.string().optional(),
+    fileUrl: z.string().optional(), // keep it simple here
+    barangay: z.string().min(1, { message: "Barangay is required." }),
+    startDate: z.string().min(1, { message: "Start date is required." }),
+    endDate: z.string().min(1, { message: "End date is required." }),
+  })
+  .superRefine((data, ctx) => {
+    if (data.isManualTyping) {
+      if (!data.content || data.content.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["content"],
+          message: "Content is required when manual typing is enabled.",
+        });
+      }
+    } else {
+      if (!data.fileUrl || data.fileUrl.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["fileUrl"],
+          message: "File upload is required when manual typing is disabled.",
+        });
+      } else {
+        try {
+          new URL(data.fileUrl); // validate proper URL only if it exists
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["fileUrl"],
+            message: "Invalid file URL",
+          });
+        }
+      }
+    }
+  });

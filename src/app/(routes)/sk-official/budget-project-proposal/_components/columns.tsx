@@ -9,32 +9,8 @@ import { useState } from "react";
 import { ProjectProposalProps } from "@/types/interface";
 import CellAction from "./cell-action";
 import { Badge } from "@/components/ui/badge";
-import { formattedBudget } from '@/lib/utils';
-
-const ExpandableDescription = ({ description }: { description: string }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const maxLength = 50;
-
-  if (description.length <= maxLength) {
-    return <span className="ml-2.5">{description}</span>;
-  }
-
-  const shortenedDescription = description.substring(0, maxLength) + "...";
-
-  return (
-    <div className="ml-2.5 max-w-sm whitespace-normal break-words">
-      {isExpanded ? description : shortenedDescription}
-      <Button
-        variant="link"
-        size="sm"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="p-0 h-auto ml-1 text-blue-600 hover:no-underline"
-      >
-        {isExpanded ? "View less" : "View more"}
-      </Button>
-    </div>
-  );
-};
+import { extractFileName, formattedBudget } from "@/lib/utils";
+import Link from "next/link";
 
 export const columns: ColumnDef<ProjectProposalProps>[] = [
   {
@@ -111,21 +87,29 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
     },
   },
   {
-    accessorKey: "description",
+    accessorKey: "fileUrl",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Description
+          File URL
           <ChevronsUpDown className="h-4 w-4 ml-1" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const description = row.original.description;
-      return <ExpandableDescription description={description} />;
+      const fileUrl = row.original.fileUrl;
+      return (
+        <Link
+          href={fileUrl}
+          target="_blank"
+          className="ml-2.5 hover:underline text-blue-600"
+        >
+          {extractFileName(fileUrl)}
+        </Link>
+      );
     },
   },
   {
@@ -170,7 +154,7 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
           badgeVariant = "default";
           badgeColorClass = "bg-green-100 text-green-700 hover:bg-green-200";
           break;
-          case "In Progress":
+        case "In Progress":
           badgeVariant = "default";
           badgeColorClass = "bg-blue-100 text-blue-700 hover:bg-blue-200";
           break;

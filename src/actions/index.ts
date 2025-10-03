@@ -8,6 +8,7 @@ import {
   budgetDistributionSchema,
   budgetReportSchema,
   cbydpReportSchema,
+  eventSchema,
   loginSchema,
   meetingAgendaSchema,
   meetingMinutesSchema,
@@ -30,6 +31,7 @@ import {
   BudgetDistributionFormValues,
   BudgetReportFormValues,
   CBYDPReportFormValues,
+  EventFormValues,
   MeetingAgendaFormValues,
   MinutesMeetingFormValues,
   ProjectProposalFormValues,
@@ -660,7 +662,10 @@ export async function createBudgetReport(
 
     const newReport = await db.budgetReports.create({
       data: {
-        ...validatedData,
+        fileSize: validatedData.fileSize as string,
+        fileType: validatedData.fileType as string,
+        fileUrl: validatedData.fileUrl as string,
+        name: validatedData.name,
         uploadedBy: userId,
       },
     });
@@ -691,7 +696,10 @@ export async function updateBudgetReport(
   userId: string
 ) {
   try {
+    // Validate form data
     const validatedData = budgetReportSchema.parse(data);
+
+    // Find existing report
     const existingReport = await db.budgetReports.findUnique({
       where: { id },
     });
@@ -703,10 +711,14 @@ export async function updateBudgetReport(
     const updatedReport = await db.budgetReports.update({
       where: { id },
       data: {
-        ...validatedData,
+        fileSize: validatedData.fileSize as string,
+        fileType: validatedData.fileType as string,
+        fileUrl: validatedData.fileUrl as string,
+        name: validatedData.name,
       },
     });
 
+    // Log the update action
     await db.systemLogs.create({
       data: {
         userId,
@@ -804,7 +816,10 @@ export async function createProjectProposal(
 
     const newReport = await db.projectProposal.create({
       data: {
-        ...validatedData,
+        title: validatedData.title,
+        budget: validatedData.budget,
+        fileUrl: validatedData.fileUrl as string,
+        description: validatedData.content as string,
         createdBy: userId,
       },
     });
@@ -847,7 +862,10 @@ export async function updateProjectProposal(
     const updatedReport = await db.projectProposal.update({
       where: { id },
       data: {
-        ...validatedData,
+        title: validatedData.title,
+        budget: validatedData.budget,
+        fileUrl: validatedData.fileUrl as string,
+        description: validatedData.content as string,
       },
     });
 
@@ -868,6 +886,67 @@ export async function updateProjectProposal(
       );
     }
     throw new Error("Failed to update project proposal.");
+  }
+}
+
+export async function createEvent(data: EventFormValues, barangay: string) {
+  try {
+    const validatedData = eventSchema.parse(data);
+
+    const newEvent = await db.events.create({
+      data: {
+        name: validatedData.name,
+        startDate: validatedData.startDate,
+        endDate: validatedData.endDate,
+        fileUrl: validatedData.fileUrl as string,
+        description: validatedData.content as string,
+        barangay: barangay,
+      },
+    });
+
+    return newEvent;
+  } catch (error) {
+    console.error("Error creating event:", error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to create event.");
+  }
+}
+
+export async function updateEvent(
+  id: string,
+  data: EventFormValues,
+  barangay: string
+) {
+  try {
+    const validatedData = eventSchema.parse(data);
+
+    const updatedEvent = await db.events.update({
+      data: {
+        name: validatedData.name,
+        startDate: validatedData.startDate,
+        endDate: validatedData.endDate,
+        fileUrl: validatedData.fileUrl as string,
+        description: validatedData.content as string,
+        barangay: barangay,
+      },
+      where: {
+        id,
+      },
+    });
+
+    return updatedEvent;
+  } catch (error) {
+    console.error("Error updating event:", error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to update event.");
   }
 }
 

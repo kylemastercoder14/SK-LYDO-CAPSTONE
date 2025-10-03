@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,6 +25,10 @@ import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { BudgetReportFormValues } from "@/types/types";
 import { createBudgetReport, updateBudgetReport } from "@/actions";
+import { Switch } from "@/components/ui/switch";
+import { RichTextEditor } from "@/components/globals/rich-text-editor";
+import { convertHtmlToPdf, formatFileSize, formatFileType } from "@/lib/utils";
+import { uploadToSupabase } from "@/lib/upload";
 
 interface BudgetReportFormProps {
   initialData: BudgetReports | null;
@@ -43,6 +48,8 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
     resolver: zodResolver(budgetReportSchema),
     defaultValues: initialData || {
       name: "",
+      isManualTyping: false,
+      content: "",
       fileSize: "",
       fileType: "",
       fileUrl: "",
@@ -53,6 +60,29 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
     try {
       setLoading(true);
 
+      if (data.isManualTyping) {
+        // Use the enhanced PDF generation
+        const doc = convertHtmlToPdf(data.content || "", data.name);
+
+        const pdfBlob = doc.output("blob");
+
+        const fileSize = formatFileSize(pdfBlob.size);
+
+        const file = new File([pdfBlob], `${data.name}.pdf`, {
+          type: "application/pdf",
+        });
+
+        const { url: fileUrl } = await uploadToSupabase(file, {
+          bucket: "assets",
+          onUploading: setLoading,
+        });
+
+        data.fileUrl = fileUrl;
+        data.fileSize = fileSize;
+        data.fileType = "PDF";
+      }
+
+      // Save to DB
       if (initialData) {
         await updateBudgetReport(initialData.id, data, userId);
         toast.success("Budget report updated successfully! 🎉");
@@ -60,6 +90,7 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
         await createBudgetReport(data, userId);
         toast.success("Budget report created successfully! ✨");
       }
+
       router.refresh();
       onClose?.();
     } catch (error: any) {
@@ -84,6 +115,28 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="pb-4">
           <div className="grid grid-cols-1 gap-x-4 gap-y-5">
+            <FormField
+              control={form.control}
+              name="isManualTyping"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-1">
+                    <FormLabel>Manual Typing</FormLabel>
+                    <FormDescription>
+                      Enable this option if you prefer to manually type in the
+                      details instead of uploading a file.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             {/* Budget Name Field */}
             <FormField
               control={form.control}
@@ -102,61 +155,96 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
                 </FormItem>
               )}
             />
-            {/* File Size Field */}
-            <FormField
-              control={form.control}
-              name="fileSize"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>File Size</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="e.g., 2.5 MB"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* File Type Field */}
-            <FormField
-              control={form.control}
-              name="fileType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>File Type</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="e.g., PDF"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* File URL Field */}
-            <FormField
-              control={form.control}
-              name="fileUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>File URL</FormLabel>
-                  <FormControl>
-                    <SingleFileUpload
-                      onFileUpload={field.onChange}
-                      defaultValue={field.value}
-                      bucket="assets"
-                      maxFileSizeMB={5}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            {!form.watch("isManualTyping") && (
+              <>
+                {/* File Size Field */}
+                <FormField
+                  control={form.control}
+                  name="fileSize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File Size</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={loading}
+                          placeholder="e.g., 2.5 MB"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* File Type Field */}
+                <FormField
+                  control={form.control}
+                  name="fileType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File Type</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={loading}
+                          placeholder="e.g., PDF"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* File URL Field */}
+                <FormField
+                  control={form.control}
+                  name="fileUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File URL</FormLabel>
+                      <FormControl>
+                        <SingleFileUpload
+                          onFileUpload={(file) => {
+                            if (file) {
+                              form.setValue(
+                                "fileSize",
+                                formatFileSize(file.size)
+                              );
+                              form.setValue(
+                                "fileType",
+                                formatFileType(file.type)
+                              );
+                              form.setValue("fileUrl", file.url);
+                            }
+                          }}
+                          defaultValue={field.value}
+                          maxFileSizeMB={5}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            {form.watch("isManualTyping") && (
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Content</FormLabel>
+                    <FormControl>
+                      <RichTextEditor
+                        onChangeAction={field.onChange}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
           <div className="pt-6 space-x-2 flex items-center justify-end w-full">
             <Button

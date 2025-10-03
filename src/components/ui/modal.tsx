@@ -38,7 +38,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={className}>
+      <DialogContent className={`${className} !max-w-4xl overflow-y-auto max-h-[70vh]`}>
         {(title || description) && (
           <DialogHeader>
             {title && <DialogTitle>{title}</DialogTitle>}
