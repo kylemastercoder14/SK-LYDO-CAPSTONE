@@ -8,6 +8,8 @@ import {
   MoreHorizontal,
   ArchiveIcon,
   RefreshCcw,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -98,6 +100,18 @@ const CellAction = ({ data }: { data: ProjectProposalProps }) => {
             <FileTextIcon className="size-4" />
             View file
           </DropdownMenuItem>
+          {data.status === "Pending" && (
+            <>
+              <DropdownMenuItem disabled>
+                <CheckCircle className="size-4" />
+                Approve Proposal
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <XCircle className="size-4" />
+                Reject Proposal
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           {data.isArchived ? (
             <DropdownMenuItem onClick={() => setOpenRetrieve(true)}>

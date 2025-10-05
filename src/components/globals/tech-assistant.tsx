@@ -11,7 +11,7 @@ const TechAssistant = () => {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('https://nyc-sk.com/assets/img/front-pages/landing-page/img1.JPG')`,
+              backgroundImage: `url('/sk-pederasyon.jpg')`,
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-pink-400/60 via-purple-500/60 to-blue-600/60 group-hover:backdrop-blur-sm transition-all duration-300" />
@@ -37,7 +37,7 @@ const TechAssistant = () => {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('https://nyc-sk.com/assets/img/front-pages/landing-page/img2.png')`,
+              backgroundImage: `url('/sk-chairman.jpg')`,
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-red-400/60 via-pink-500/60 to-red-600/60 group-hover:backdrop-blur-sm transition-all duration-300" />
@@ -63,7 +63,7 @@ const TechAssistant = () => {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('https://nyc-sk.com/assets/img/front-pages/landing-page/img3.png')`,
+              backgroundImage: `url('/sk-lydo.jpg')`,
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/60 via-blue-600/60 to-cyan-600/60 group-hover:backdrop-blur-sm transition-all duration-300" />
@@ -89,7 +89,7 @@ const TechAssistant = () => {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('https://nyc-sk.com/assets/img/front-pages/landing-page/img4.jpg')`,
+              backgroundImage: `url('/sk-kagawad.jpg')`,
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/60 via-orange-500/60 to-red-500/60 group-hover:backdrop-blur-sm transition-all duration-300" />

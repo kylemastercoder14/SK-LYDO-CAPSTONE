@@ -209,8 +209,7 @@ const Page = async () => {
 
   const budgetDistribution = await db.budgetDistribution.findMany({
     where: {
-      barangay: "burol-iii",
-      isApproved: true,
+      isApproved: true
     },
   });
 

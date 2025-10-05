@@ -3,7 +3,6 @@
 import React from "react";
 
 import {
-  EditIcon,
   FileTextIcon,
   MoreHorizontal,
   ArchiveIcon,
