@@ -27,7 +27,7 @@ import { BudgetReportFormValues } from "@/types/types";
 import { createBudgetReport, updateBudgetReport } from "@/actions";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/globals/rich-text-editor";
-import { convertHtmlToPdf, formatFileSize, formatFileType } from "@/lib/utils";
+import { convertHtmlToDocx, formatFileSize, formatFileType } from "@/lib/utils";
 import { uploadToSupabase } from "@/lib/upload";
 
 interface BudgetReportFormProps {
@@ -61,15 +61,12 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
       setLoading(true);
 
       if (data.isManualTyping) {
-        // Use the enhanced PDF generation
-        const doc = convertHtmlToPdf(data.content || "", data.name);
+        // Create a DOCX file from typed content
+        const docxBlob = await convertHtmlToDocx(data.content || "", data.name);
 
-        const pdfBlob = doc.output("blob");
-
-        const fileSize = formatFileSize(pdfBlob.size);
-
-        const file = new File([pdfBlob], `${data.name}.pdf`, {
-          type: "application/pdf",
+        const fileSize = formatFileSize(docxBlob.size);
+        const file = new File([docxBlob], `${data.name}.docx`, {
+          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         });
 
         const { url: fileUrl } = await uploadToSupabase(file, {
@@ -79,7 +76,7 @@ const BudgetReportForm: React.FC<BudgetReportFormProps> = ({
 
         data.fileUrl = fileUrl;
         data.fileSize = fileSize;
-        data.fileType = "PDF";
+        data.fileType = "DOCX";
       }
 
       // Save to DB

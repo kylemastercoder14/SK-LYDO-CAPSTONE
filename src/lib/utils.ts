@@ -2,7 +2,20 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { UserRole } from "./config";
 import { Trend } from "@/types/types";
-import jsPDF from "jspdf";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  ImageRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  TextRun,
+  HeadingLevel,
+  Header,
+  AlignmentType,
+} from "docx";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -381,283 +394,222 @@ export function formatFileType(mime: string): string {
   return map[mime] || mime.split("/").pop()?.toUpperCase() || "UNKNOWN";
 }
 
-// Enhanced HTML to PDF conversion with proper formatting
-export function convertHtmlToPdf(html: string, title: string): jsPDF {
-  const doc = new jsPDF();
-
-  // Parse HTML content and extract structured data
-  const content = parseHtmlContent(html);
-
-  let yPosition = 20;
-  const pageWidth = doc.internal.pageSize.width;
-  const margin = 15;
-  const maxWidth = pageWidth - margin * 2;
-
-  // Add title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(title, margin, yPosition);
-  yPosition += 15;
-
-  // Add a line separator
-  doc.setLineWidth(0.5);
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  yPosition += 10;
-
-  // Process content blocks
-  for (const block of content) {
-    if (yPosition > 250) {
-      // Check if we need a new page
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    switch (block.type) {
-      case "heading":
-        yPosition = addHeading(
-          doc,
-          block.text ?? "",
-          yPosition,
-          margin,
-          maxWidth,
-          block.level ?? 1
-        );
-        break;
-      case "paragraph":
-        yPosition = addParagraph(
-          doc,
-          block.text ?? "",
-          yPosition,
-          margin,
-          maxWidth
-        );
-        break;
-      case "list":
-        yPosition = addList(
-          doc,
-          block.items ?? [],
-          yPosition,
-          margin,
-          maxWidth,
-          block.ordered ?? false
-        );
-        break;
-      case "table":
-        yPosition = addTable(
-          doc,
-          block.data ?? [],
-          yPosition,
-          margin,
-          maxWidth
-        );
-        break;
-      default:
-        yPosition = addParagraph(
-          doc,
-          block.text ?? "",
-          yPosition,
-          margin,
-          maxWidth
-        );
-    }
-
-    yPosition += 5; // Add spacing between blocks
-  }
-
-  return doc;
-}
-
-// Parse HTML content into structured blocks
-function parseHtmlContent(html: string) {
-  if (!html) return [];
+export async function convertHtmlToDocx(
+  html: string,
+  title: string
+): Promise<Blob> {
+  // 🔹 Fetch the uploaded header image (ensure path or URL is valid)
+  const response = await fetch("/Header.png");
+  const headerImageBuffer = await response.arrayBuffer();
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
-  const blocks = [];
+  const paragraphs: (Paragraph | Table)[] = [];
 
-  // Process each element in the HTML
-  const elements = doc.body.children;
+  // Add the title at the top
+  paragraphs.push(
+    new Paragraph({
+      text: title,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { after: 300 },
+    })
+  );
 
-  for (let i = 0; i < elements.length; i++) {
-    const element = elements[i];
-    const tagName = element.tagName.toLowerCase();
+  // Helper: Convert image element to ImageRun
+  const createImageRun = async (
+    el: HTMLImageElement
+  ): Promise<ImageRun | null> => {
+    try {
+      let imageBuffer: ArrayBuffer;
 
-    if (tagName.match(/^h[1-6]$/)) {
-      blocks.push({
-        type: "heading",
-        text: element.textContent?.trim() || "",
-        level: parseInt(tagName.charAt(1)),
+      if (el.src.startsWith("data:image")) {
+        const base64Data = el.src.split(",")[1];
+        imageBuffer = Uint8Array.from(atob(base64Data), (c) =>
+          c.charCodeAt(0)
+        ).buffer;
+      } else {
+        const response = await fetch(el.src);
+        const blob = await response.blob();
+        imageBuffer = await blob.arrayBuffer();
+      }
+
+      let imageType: "png" | "jpg" | "gif" | "bmp" = "png";
+      if (el.src.endsWith(".jpg") || el.src.endsWith(".jpeg"))
+        imageType = "jpg";
+      else if (el.src.endsWith(".gif")) imageType = "gif";
+      else if (el.src.endsWith(".bmp")) imageType = "bmp";
+
+      return new ImageRun({
+        data: imageBuffer,
+        transformation: {
+          width: el.width || 300,
+          height: el.height || 200,
+        },
+        type: imageType,
       });
-    } else if (tagName === "p" || tagName === "div") {
-      const text = element.textContent?.trim();
-      if (text) {
-        blocks.push({
-          type: "paragraph",
-          text: text,
-        });
-      }
-    } else if (tagName === "ul" || tagName === "ol") {
-      const items = Array.from(element.querySelectorAll("li"))
-        .map((li) => li.textContent?.trim() || "")
-        .filter((item) => item.length > 0);
+    } catch {
+      return null;
+    }
+  };
 
-      if (items.length > 0) {
-        blocks.push({
-          type: "list",
-          items: items,
-          ordered: tagName === "ol",
-        });
+  // Helper: Inline styles
+  const parseInlineStyles = (element: HTMLElement): TextRun[] => {
+    const runs: TextRun[] = [];
+    element.childNodes.forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.textContent?.trim();
+        if (text) runs.push(new TextRun(text));
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        const el = child as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+
+        const base = {
+          text: el.textContent || "",
+          bold: tag === "b" || tag === "strong",
+          italics: tag === "i" || tag === "em",
+          underline: tag === "u" ? {} : undefined,
+        };
+
+        runs.push(new TextRun(base));
       }
-    } else if (tagName === "table") {
-      const tableData = parseTable(element);
-      if (tableData.length > 0) {
-        blocks.push({
-          type: "table",
-          data: tableData,
-        });
-      }
-    } else {
-      // Fallback for other elements
-      const text = element.textContent?.trim();
-      if (text) {
-        blocks.push({
-          type: "paragraph",
-          text: text,
-        });
+    });
+    return runs;
+  };
+
+  // Recursive HTML parser
+  const processNode = async (node: Node): Promise<(Paragraph | Table)[]> => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (text) return [new Paragraph(text)];
+      return [];
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      const tag = el.tagName.toLowerCase();
+
+      switch (tag) {
+        case "h1":
+        case "h2":
+        case "h3":
+          return [
+            new Paragraph({
+              text: el.textContent || "",
+              heading:
+                tag === "h1"
+                  ? HeadingLevel.HEADING_1
+                  : tag === "h2"
+                  ? HeadingLevel.HEADING_2
+                  : HeadingLevel.HEADING_3,
+              spacing: { after: 200 },
+            }),
+          ];
+
+        case "p":
+          return [
+            new Paragraph({
+              children: parseInlineStyles(el),
+              spacing: { after: 150 },
+            }),
+          ];
+
+        case "ul":
+        case "ol":
+          return Array.from(el.children).flatMap((li) =>
+            li.tagName.toLowerCase() === "li"
+              ? [
+                  new Paragraph({
+                    text: li.textContent || "",
+                    bullet: tag === "ul" ? { level: 0 } : undefined,
+                    spacing: { after: 100 },
+                  }),
+                ]
+              : []
+          );
+
+        case "table": {
+          const rows = Array.from(el.querySelectorAll("tr")).map((row) => {
+            const cells = Array.from(row.querySelectorAll("th,td")).map(
+              (cell) => {
+                return new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: parseInlineStyles(cell as HTMLElement),
+                    }),
+                  ],
+                  width: { size: 25, type: WidthType.PERCENTAGE },
+                });
+              }
+            );
+            return new TableRow({ children: cells });
+          });
+
+          return [
+            new Table({
+              rows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ];
+        }
+
+        case "img": {
+          const image = await createImageRun(el as HTMLImageElement);
+          if (image) {
+            return [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [image],
+                spacing: { after: 200 },
+              }),
+            ];
+          }
+          return [];
+        }
+
+        case "br":
+          return [new Paragraph({})];
+
+        default:
+          const childResults = await Promise.all(
+            Array.from(el.childNodes).map((child) => processNode(child))
+          );
+          return childResults.flat();
       }
     }
+
+    return [];
+  };
+
+  // Process all HTML body nodes
+  for (const node of Array.from(doc.body.childNodes)) {
+    const processed = await processNode(node);
+    paragraphs.push(...processed);
   }
 
-  return blocks;
-}
-
-// Add heading to PDF
-function addHeading(
-  doc: jsPDF,
-  text: string,
-  y: number,
-  margin: number,
-  maxWidth: number,
-  level: number
-): number {
-  const fontSize = Math.max(14 - (level - 1) * 2, 10);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(fontSize);
-
-  const lines = doc.splitTextToSize(text, maxWidth);
-  doc.text(lines, margin, y);
-
-  return y + lines.length * fontSize * 0.35 + 8;
-}
-
-// Add paragraph to PDF
-function addParagraph(
-  doc: jsPDF,
-  text: string,
-  y: number,
-  margin: number,
-  maxWidth: number
-): number {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-
-  const lines = doc.splitTextToSize(text, maxWidth);
-  doc.text(lines, margin, y);
-
-  return y + lines.length * 11 * 0.35 + 3;
-}
-
-// Add list to PDF
-function addList(
-  doc: jsPDF,
-  items: string[],
-  y: number,
-  margin: number,
-  maxWidth: number,
-  ordered: boolean
-): number {
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-
-  let currentY = y;
-
-  items.forEach((item, index) => {
-    const bullet = ordered ? `${index + 1}.` : "•";
-    const bulletWidth = doc.getTextWidth(bullet + " ");
-
-    // Add bullet
-    doc.text(bullet, margin, currentY);
-
-    // Add item text with proper wrapping
-    const itemLines = doc.splitTextToSize(item, maxWidth - bulletWidth - 5);
-    doc.text(itemLines, margin + bulletWidth + 3, currentY);
-
-    currentY += itemLines.length * 11 * 0.35 + 2;
+  // ✅ Create the document with the header image
+  const document = new Document({
+    sections: [
+      {
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new ImageRun({
+                    data: headerImageBuffer,
+                    transformation: { width: 500, height: 75 }, // adjust header size
+                    type: "png",
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        children: paragraphs,
+      },
+    ],
   });
 
-  return currentY;
-}
-
-// Parse HTML table
-function parseTable(tableElement: Element): string[][] {
-  const rows: string[][] = [];
-  const tableRows = tableElement.querySelectorAll("tr");
-
-  tableRows.forEach((row) => {
-    const cells: string[] = [];
-    const tableCells = row.querySelectorAll("td, th");
-
-    tableCells.forEach((cell) => {
-      cells.push(cell.textContent?.trim() || "");
-    });
-
-    if (cells.length > 0) {
-      rows.push(cells);
-    }
-  });
-
-  return rows;
-}
-
-// Add simple table to PDF
-function addTable(
-  doc: jsPDF,
-  data: string[][],
-  y: number,
-  margin: number,
-  maxWidth: number
-): number {
-  if (data.length === 0) return y;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-
-  const colCount = Math.max(...data.map((row) => row.length));
-  const colWidth = maxWidth / colCount;
-  let currentY = y;
-
-  data.forEach((row, rowIndex) => {
-    // Set header style for first row
-    if (rowIndex === 0) {
-      doc.setFont("helvetica", "bold");
-    } else {
-      doc.setFont("helvetica", "normal");
-    }
-
-    row.forEach((cell, colIndex) => {
-      const x = margin + colIndex * colWidth;
-      const cellLines = doc.splitTextToSize(cell, colWidth - 4);
-      doc.text(cellLines, x + 2, currentY);
-    });
-
-    currentY += 15;
-
-    // Add line after header
-    if (rowIndex === 0) {
-      doc.setLineWidth(0.3);
-      doc.line(margin, currentY - 5, margin + maxWidth, currentY - 5);
-    }
-  });
-
-  return currentY + 5;
+  return await Packer.toBlob(document);
 }
