@@ -27,8 +27,8 @@ import { ProjectProposalFormValues } from "@/types/types";
 import { createProjectProposal, updateProjectProposal } from "@/actions";
 import { RichTextEditor } from "@/components/globals/rich-text-editor";
 import { Switch } from "@/components/ui/switch";
-import { convertHtmlToPdf } from "@/lib/utils";
-import { uploadToSupabase } from '@/lib/upload';
+import { convertHtmlToDocx } from "@/lib/utils";
+import { uploadToSupabase } from "@/lib/upload";
 
 interface ProjectProposalFormProps {
   initialData: ProjectProposal | null;
@@ -60,13 +60,11 @@ const ProjectProposalForm: React.FC<ProjectProposalFormProps> = ({
       setLoading(true);
 
       if (data.isManualTyping) {
-        // Use the enhanced PDF generation
-        const doc = convertHtmlToPdf(data.content || "", data.title);
+        // Create a DOCX file from typed content
+        const docxBlob = await convertHtmlToDocx(data.content || "", data.title);
 
-        const pdfBlob = doc.output("blob");
-
-        const file = new File([pdfBlob], `${data.title}.pdf`, {
-          type: "application/pdf",
+        const file = new File([docxBlob], `${data.title}.docx`, {
+          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         });
 
         const { url: fileUrl } = await uploadToSupabase(file, {
