@@ -25,7 +25,7 @@ import SingleFileUpload from "@/components/globals/file-upload";
 import { EventFormValues } from "@/types/types";
 import { Switch } from "@/components/ui/switch";
 import { RichTextEditor } from "@/components/globals/rich-text-editor";
-import { convertHtmlToPdf } from "@/lib/utils";
+import { convertHtmlToDocx } from "@/lib/utils";
 import { uploadToSupabase } from "@/lib/upload";
 import { createEvent, updateEvent } from "@/actions";
 import { toast } from "sonner";
@@ -72,13 +72,11 @@ const EventForm: React.FC<EventFormProps> = ({
       setLoading(true);
 
       if (data.isManualTyping) {
-        // Use the enhanced PDF generation
-        const doc = convertHtmlToPdf(data.content || "", data.name);
+        // Create a DOCX file from typed content
+        const docxBlob = await convertHtmlToDocx(data.content || "", data.name);
 
-        const pdfBlob = doc.output("blob");
-
-        const file = new File([pdfBlob], `${data.name}.pdf`, {
-          type: "application/pdf",
+        const file = new File([docxBlob], `${data.name}.docx`, {
+          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         });
 
         const { url: fileUrl } = await uploadToSupabase(file, {
