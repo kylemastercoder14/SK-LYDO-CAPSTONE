@@ -17,7 +17,7 @@ interface ProjectProposal {
 }
 
 const Page = ({ searchParams }: { searchParams: { barangay?: string } }) => {
-  const barangay = searchParams.barangay || null;
+  const barangay = searchParams?.barangay;
 
   const [projects, setProjects] = useState<ProjectProposal[]>([]);
   const [loading, setLoading] = useState(true);

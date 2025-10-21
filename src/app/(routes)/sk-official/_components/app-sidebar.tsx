@@ -11,7 +11,8 @@ import {
   IconSpeakerphone,
   IconUsersGroup,
   IconWallet,
-  IconLogs
+  IconLogs,
+  IconTrack,
 } from "@tabler/icons-react";
 
 import {
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavMain } from "./nav-main";
 import Image from "next/image";
-import { OfficialType } from '@prisma/client';
+import { OfficialType } from "@prisma/client";
 
 const data = {
   CHAIRPERSON: [
@@ -68,6 +69,11 @@ const data = {
       url: "/sk-official/minutes-of-meeting",
       icon: IconClock,
     },
+    {
+      title: "Progress Project Tracking",
+      url: "/sk-official/progress-project-tracking",
+      icon: IconTrack,
+    },
   ],
   KAGAWAD: [
     {
@@ -85,6 +91,11 @@ const data = {
       url: "/sk-official/events-activities",
       icon: IconSpeakerphone,
     },
+    {
+      title: "Progress Project Tracking",
+      url: "/sk-official/progress-project-tracking",
+      icon: IconTrack,
+    },
   ],
   TREASURER: [
     {
@@ -92,7 +103,7 @@ const data = {
       url: "/sk-official/dashboard",
       icon: IconDashboard,
     },
-     {
+    {
       title: "Budget Reports",
       url: "/sk-official/budget-reports",
       icon: IconWallet,
@@ -106,6 +117,11 @@ const data = {
       title: "Budget Distribution",
       url: "/sk-official/budget-distribution",
       icon: IconDeviceTabletPlus,
+    },
+    {
+      title: "Progress Project Tracking",
+      url: "/sk-official/progress-project-tracking",
+      icon: IconTrack,
     },
   ],
   SECRETARY: [
@@ -129,7 +145,12 @@ const data = {
       url: "/sk-official/project-reports",
       icon: IconFileDescription,
     },
-  ]
+    {
+      title: "Progress Project Tracking",
+      url: "/sk-official/progress-project-tracking",
+      icon: IconTrack,
+    },
+  ],
 };
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -137,7 +158,11 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   officialType: OfficialType;
 }
 
-export function AppSidebar({ officialType, barangay, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  officialType,
+  barangay,
+  ...props
+}: AppSidebarProps) {
   const navItems = data[officialType];
   return (
     <Sidebar collapsible="offcanvas" {...props}>
