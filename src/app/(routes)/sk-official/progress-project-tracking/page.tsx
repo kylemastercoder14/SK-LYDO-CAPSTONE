@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import FilterBarangay from "../_components/filter-barangay";
 import { Loader2 } from "lucide-react";
+import { useSearchParams } from 'next/navigation';
 
 interface ProjectProposal {
   id: string;
@@ -16,8 +17,9 @@ interface ProjectProposal {
   };
 }
 
-const Page = ({ searchParams }: { searchParams: { barangay?: string } }) => {
-  const barangay = searchParams?.barangay;
+const Page = () => {
+  const searchParams = useSearchParams(); // ✅ get params from URL
+  const barangay = searchParams.get("barangay") || ""; // ✅ extract param safely
 
   const [projects, setProjects] = useState<ProjectProposal[]>([]);
   const [loading, setLoading] = useState(true);
