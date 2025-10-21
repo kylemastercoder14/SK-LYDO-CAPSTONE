@@ -4,16 +4,16 @@ import React from "react";
 const PhilippineYouthDevelopmentPlan = () => {
   // Data for each committee (replace with actual data)
   const committeeData = {
-    active_citizenship: 125,
-    economic_empowerment: 98,
-    education: 156,
-    environment: 87,
-    global_mobility: 112,
-    governance: 76,
-    health: 143,
-    peace_building_and_security: 65,
-    social_inclusion_and_equity: 92,
-    agriculture: 108,
+    active_citizenship: 75,
+    economic_empowerment: 75,
+    education: 75,
+    environment: 75,
+    global_mobility: 75,
+    governance: 75,
+    health: 75,
+    peace_building_and_security: 75,
+    social_inclusion_and_equity: 75,
+    agriculture: 75,
   };
 
   return (

@@ -16,6 +16,7 @@ import {
   projectProposalSchema,
   projectReportSchema,
   registerSchema,
+  resolutionSchema,
   securitySchema,
   usernameSchema,
 } from "@/validators";
@@ -36,6 +37,7 @@ import {
   MinutesMeetingFormValues,
   ProjectProposalFormValues,
   ProjectReportFormValues,
+  ResolutionFormValues,
 } from "@/types/types";
 import { OfficialType } from "@prisma/client";
 import jwt from "jsonwebtoken";
@@ -1164,14 +1166,19 @@ export async function retrieveCBYDPReport(id: string, userId: string) {
 
 export async function createMeetingAgenda(
   data: MeetingAgendaFormValues,
-  userId: string
+  userId: string,
+  location?: string
 ) {
   try {
     const validatedData = meetingAgendaSchema.parse(data);
 
     const newReport = await db.meetingAgenda.create({
       data: {
-        ...validatedData,
+        fileSize: validatedData.fileSize as string,
+        fileType: validatedData.fileType as string,
+        fileUrl: validatedData.fileUrl as string,
+        name: validatedData.name,
+        location: location || "",
         uploadedBy: userId,
       },
     });
@@ -1214,7 +1221,11 @@ export async function updateMeetingAgenda(
     const updatedReport = await db.meetingAgenda.update({
       where: { id },
       data: {
-        ...validatedData,
+        fileSize: validatedData.fileSize as string,
+        fileType: validatedData.fileType as string,
+        fileUrl: validatedData.fileUrl as string,
+        name: validatedData.name,
+        uploadedBy: userId,
       },
     });
 
@@ -1466,7 +1477,7 @@ export async function assignCommittee(formData: FormData) {
   return { success: true };
 }
 
-export async function getDashboardStats() {
+export async function getDashboardStats(barangay?: string) {
   const now = new Date();
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -1477,6 +1488,7 @@ export async function getDashboardStats() {
       role: "SK_OFFICIAL",
       isActive: true,
       createdAt: { gte: startOfThisMonth },
+      barangay,
     },
   });
   const previousMembers = await db.user.count({
@@ -1484,6 +1496,7 @@ export async function getDashboardStats() {
       role: "SK_OFFICIAL",
       isActive: true,
       createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+      barangay,
     },
   });
   const membersTrend = calcTrend(currentMembers, previousMembers);
@@ -1495,11 +1508,20 @@ export async function getDashboardStats() {
 
   // 📊 Active Programs
   const currentPrograms = await db.projectProposal.count({
-    where: { status: "In Progress", createdAt: { gte: startOfThisMonth } },
+    where: {
+      user: {
+        barangay,
+      },
+      status: "In Progress",
+      createdAt: { gte: startOfThisMonth },
+    },
   });
   const previousPrograms = await db.projectProposal.count({
     where: {
       status: "In Progress",
+      user: {
+        barangay,
+      },
       createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
     },
   });
@@ -1513,10 +1535,20 @@ export async function getDashboardStats() {
   // 📊 Budget Utilization
   const totalBudget = await db.projectProposal.aggregate({
     _sum: { budget: true },
+    where: {
+      user: {
+        barangay,
+      },
+    },
   });
   const approvedBudget = await db.projectProposal.aggregate({
     _sum: { budget: true },
-    where: { status: "Approved" },
+    where: {
+      status: "Approved",
+      user: {
+        barangay,
+      },
+    },
   });
 
   const utilization =
@@ -1529,6 +1561,9 @@ export async function getDashboardStats() {
     _sum: { budget: true },
     where: {
       status: "Approved",
+      user: {
+        barangay,
+      },
       createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
     },
   });
@@ -1545,10 +1580,11 @@ export async function getDashboardStats() {
 
   // 📊 Upcoming Events
   const currentEvents = await db.events.count({
-    where: { startDate: { gte: now.toISOString().split("T")[0] } },
+    where: { barangay, startDate: { gte: now.toISOString().split("T")[0] } },
   });
   const previousEvents = await db.events.count({
     where: {
+      barangay,
       startDate: {
         gte: startOfLastMonth.toISOString().split("T")[0],
         lt: startOfThisMonth.toISOString().split("T")[0],
@@ -1749,3 +1785,198 @@ export const rejectBudgetDistribution = async (id: string) => {
     throw new Error("Failed to reject budget distribution.");
   }
 };
+
+export const toggleActiveStatusUser = async (
+  userId: string,
+  isActive: boolean
+) => {
+  try {
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: { isActive },
+    });
+
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    console.error("[TOGGLE_ACTIVE_STATUS_USER_ERROR]", error);
+    return { success: false, error: "Failed to update user status" };
+  }
+};
+
+export async function updateProjectStatus(
+  id: string,
+  status: string,
+  reason?: string
+) {
+  try {
+    const validStatuses = [
+      "Pending",
+      "Approved",
+      "Rejected",
+      "In Progress",
+      "Completed",
+    ];
+    if (!validStatuses.includes(status)) {
+      throw new Error("Invalid status value");
+    }
+
+    const data: any = { status };
+    if (status === "Rejected" && reason) {
+      data.reasonForRejection = reason;
+    }
+
+    const updated = await db.projectProposal.update({
+      where: { id },
+      data,
+    });
+
+    return updated;
+  } catch (error) {
+    console.error("Error updating project proposal status:", error);
+    throw new Error("Failed to update project proposal status.");
+  }
+}
+
+export async function createResolution(
+  data: ResolutionFormValues,
+  userId: string
+) {
+  try {
+    const validatedData = resolutionSchema.parse(data);
+
+    const newReport = await db.resolution.create({
+      data: {
+        ...validatedData,
+        uploadedBy: userId,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "createResolution",
+        details: `Resolution "${newReport.name}" created by user ${userId}`,
+      },
+    });
+
+    return newReport;
+  } catch (error) {
+    console.error("Error creating Resolution:", error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to create Resolution.");
+  }
+}
+
+export async function updateResolution(
+  id: string,
+  data: ResolutionFormValues,
+  userId: string
+) {
+  try {
+    const validatedData = resolutionSchema.parse(data);
+    const existingReport = await db.resolution.findUnique({
+      where: { id },
+    });
+
+    if (!existingReport || existingReport.uploadedBy !== userId) {
+      throw new Error("Unauthorized to update this Resolution.");
+    }
+
+    const updatedReport = await db.resolution.update({
+      where: { id },
+      data: {
+        ...validatedData,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "updateResolution",
+        details: `Resolution "${updatedReport.name}" updated by user ${userId}`,
+      },
+    });
+
+    return updatedReport;
+  } catch (error) {
+    console.error(`Error updating Resolution with ID ${id}:`, error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to update Resolution.");
+  }
+}
+
+export async function archiveResolution(id: string, userId: string) {
+  try {
+    const existingReport = await db.resolution.findUnique({
+      where: { id },
+    });
+    if (!existingReport || existingReport.uploadedBy !== userId) {
+      throw new Error("Unauthorized to delete this report.");
+    }
+
+    await db.resolution.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "archiveResolution",
+        details: `Resolution "${
+          existingReport.name
+        }" archived by user ${userId} on ${new Date().toISOString()}`,
+      },
+    });
+
+    return { message: "Resolution archived successfully." };
+  } catch (error) {
+    console.error(`Error archiving Resolution with ID ${id}:`, error);
+    throw new Error("Failed to archive Resolution.");
+  }
+}
+
+export async function retrieveResolution(id: string, userId: string) {
+  try {
+    const existingReport = await db.resolution.findUnique({
+      where: { id },
+    });
+    if (!existingReport || existingReport.uploadedBy !== userId) {
+      throw new Error("Unauthorized to retrieve this report.");
+    }
+
+    await db.resolution.update({
+      where: { id },
+      data: {
+        isArchived: false,
+        archivedAt: null,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "retrieveResolution",
+        details: `Resolution "${
+          existingReport.name
+        }" retrieved by user ${userId} on ${new Date().toISOString()}`,
+      },
+    });
+
+    return { message: "Resolution retrieved successfully." };
+  } catch (error) {
+    console.error(`Error retrieving Resolution with ID ${id}:`, error);
+    throw new Error("Failed to retrieve Resolution.");
+  }
+}

@@ -7,6 +7,8 @@ import {
   SystemLogs,
   MeetingMinutes,
   User,
+  Ticket,
+  Resolution,
 } from "@prisma/client";
 
 export interface SystemLogsProps extends SystemLogs {
@@ -34,5 +36,13 @@ export interface MeetingAgendaProps extends MeetingAgenda {
 }
 
 export interface MinutesMeetingProps extends MeetingMinutes {
+  user: User | null;
+}
+
+export interface ResolutionProps extends Resolution {
+  user: User | null;
+}
+
+export interface TicketWithUser extends Ticket {
   user: User | null;
 }

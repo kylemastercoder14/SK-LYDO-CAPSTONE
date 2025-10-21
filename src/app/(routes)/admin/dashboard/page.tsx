@@ -3,21 +3,36 @@ import SectionCard from "../_components/section-cards";
 import { SKParticipationChart } from "../_components/chart-area-interactive";
 import { getDashboardStats } from "@/actions";
 import db from "@/lib/db";
+import FilterBarangay from "../_components/filter-barangay";
+import Heading from "@/components/globals/heading";
 
-const Page = async () => {
-  const dashboardStats = await getDashboardStats();
+const Page = async ({
+  searchParams,
+}: {
+  searchParams: { barangay?: string };
+}) => {
+  const barangay = searchParams.barangay || null;
+
+  const dashboardStats = await getDashboardStats(barangay ?? undefined);
+
   const projects = await db.projectProposal.findMany({
     orderBy: {
       createdAt: "desc",
     },
     where: {
       isArchived: false,
+      user: {
+        barangay,
+      },
     },
     take: 4,
   });
   const budgetReport = await db.budgetReports.findMany({
     where: {
       isArchived: false,
+      user: {
+        barangay,
+      },
     },
     take: 5,
   });
@@ -27,18 +42,31 @@ const Page = async () => {
     },
     where: {
       isArchived: false,
+      user: {
+        barangay,
+      },
     },
     take: 5,
   });
   const skParticipant = await db.projectProposal.findMany({
     where: {
       isArchived: false,
+      user: {
+        barangay,
+      },
     },
   });
 
   return (
     <div className="p-6">
-      <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <Heading
+          title="Dashboard Analytics"
+          description="Here’s What happening on your system. See the statistics at once."
+        />
+        <FilterBarangay />
+      </div>
+      <div className="flex mt-5 flex-col gap-4">
         {/* Stats Cards */}
         <div className="grid lg:grid-cols-4 grid-cols-1 gap-5">
           {dashboardStats.map((stat, index) => (
@@ -166,7 +194,8 @@ const Page = async () => {
                       />
                     </svg>
                     <span>
-                      {meeting.createdAt.toLocaleDateString()} at {meeting.createdAt.toLocaleTimeString()}
+                      {meeting.createdAt.toLocaleDateString()} at{" "}
+                      {meeting.createdAt.toLocaleTimeString()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">

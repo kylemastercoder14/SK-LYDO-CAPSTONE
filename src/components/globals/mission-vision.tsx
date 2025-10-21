@@ -16,14 +16,11 @@ const MissionVisionSection = () => {
           </h4>
           <p className='text-base md:text-lg text-zinc-800 dark:text-zinc-200'>
             The Sangguniang Kabataan Web Portal is exclusively tailored for SK,
-            LYDO, and LYDC members, providing easy access to essential
+            LYDO, and Federation, providing easy access to essential
             information, templates, and forms and allowing them to submit
             reports. It offers opportunities for continuing training and skill
             development through various courses, ensuring continuous growth and
-            improvement. Additionally, it serves as a seamless channel for the
-            National Youth Commission to transmit vital information from the
-            national level down to the barangays, facilitating efficient
-            communication and collaboration.
+            improvement.
           </p>
         </div>
 

@@ -26,7 +26,7 @@ const TechAssistant = () => {
             </div>
             <div className="absolute text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <span className="text-6xl sm:text-7xl lg:text-9xl font-black text-yellow-300 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                42
+                1
               </span>
             </div>
           </div>
@@ -52,7 +52,7 @@ const TechAssistant = () => {
             </div>
             <div className="absolute text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <span className="text-6xl sm:text-7xl lg:text-9xl font-black text-yellow-300 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                167
+                75
               </span>
             </div>
           </div>
@@ -78,7 +78,7 @@ const TechAssistant = () => {
             </div>
             <div className="absolute text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <span className="text-6xl sm:text-7xl lg:text-9xl font-black text-yellow-300 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                86
+                1
               </span>
             </div>
           </div>
@@ -104,7 +104,7 @@ const TechAssistant = () => {
             </div>
             <div className="absolute text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <span className="text-6xl sm:text-7xl lg:text-9xl font-black text-yellow-300 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                422
+                525
               </span>
             </div>
           </div>

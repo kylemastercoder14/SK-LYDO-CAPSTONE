@@ -4,8 +4,11 @@ import { DataTable } from "./_components/data-table";
 import db from "@/lib/db";
 import { columns } from "./_components/columns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MeetingAgendaModal from './_components/meeting-agenda-modal';
+import { getServerSession } from '@/lib/session';
 
 const Page = async () => {
+  const user = await getServerSession();
   const data = await db.meetingAgenda.findMany({
     orderBy: {
       createdAt: "desc",
@@ -22,6 +25,7 @@ const Page = async () => {
           title="Meeting Agenda"
           description="View and manage meeting agendas for your system."
         />
+        <MeetingAgendaModal userId={user?.id ?? ""} />
       </div>
       <div className="mt-5">
         <Tabs defaultValue="active">

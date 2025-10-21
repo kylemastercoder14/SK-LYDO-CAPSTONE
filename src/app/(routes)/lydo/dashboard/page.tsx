@@ -13,8 +13,16 @@ import { BudgetPieChart } from "../_components/budget-pie-chart";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { RecentActivitiesTable } from "../_components/recent-activities-table";
+import Heading from "@/components/globals/heading";
+import FilterBarangay from "../_components/filter-barangay";
 
-const Page = async () => {
+const Page = async ({
+  searchParams,
+}: {
+  searchParams: { barangay?: string };
+}) => {
+  const barangay = searchParams.barangay || null;
+
   const user = await getServerSession();
 
   // If no session exists, redirect to sign-in
@@ -53,47 +61,74 @@ const Page = async () => {
   ] = await Promise.all([
     db.projectReports.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
       },
     }),
     db.projectReports.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
       },
     }),
     db.budgetReports.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
       },
     }),
     db.budgetReports.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
       },
     }),
     db.cBYDP.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
       },
     }),
     db.cBYDP.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
       },
     }),
     db.meetingAgenda.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
       },
     }),
     db.meetingAgenda.count({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
       },
     }),
     // Fetch project proposals from the last 3 months
     db.projectProposal.findMany({
       where: {
+        user: {
+          barangay,
+        },
         createdAt: {
           gte: threeMonthsAgo,
           lte: now,
@@ -181,6 +216,7 @@ const Page = async () => {
     where: {
       user: {
         // only include logs where the related user is NOT admin
+        barangay,
         role: { not: "ADMIN" },
       },
     },
@@ -205,17 +241,29 @@ const Page = async () => {
     };
   });
 
-  const events = await db.events.findMany({});
+  const events = await db.events.findMany({
+    where: {
+      barangay: barangay || ""
+    }
+  });
 
   const budgetDistribution = await db.budgetDistribution.findMany({
     where: {
-      isApproved: true
+      barangay: barangay || "",
+      isApproved: true,
     },
   });
 
   return (
     <div className="p-5">
-      <div className="grid lg:grid-cols-4 grid-cols-1 gap-5">
+      <div className="flex items-center justify-between">
+        <Heading
+          title="Dashboard Analytics"
+          description="Here’s What happening on your system. See the statistics at once."
+        />
+        <FilterBarangay />
+      </div>
+      <div className="grid mt-5 lg:grid-cols-4 grid-cols-1 gap-5">
         <StatisticsCard title="Project Reports" {...projectReportsMetrics} />
         <StatisticsCard title="Budget Reports" {...budgetReportsMetrics} />
         <StatisticsCard title="CBYDP" {...cbydpMetrics} />

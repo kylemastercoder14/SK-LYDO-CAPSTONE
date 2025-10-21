@@ -11,6 +11,7 @@ import {
   IconSpeakerphone,
   IconUsersGroup,
   IconWallet,
+  IconLogs
 } from "@tabler/icons-react";
 
 import {
@@ -121,7 +122,7 @@ const data = {
     {
       title: "Resolution",
       url: "/sk-official/resolution",
-      icon: IconClock,
+      icon: IconLogs,
     },
     {
       title: "Project Reports",

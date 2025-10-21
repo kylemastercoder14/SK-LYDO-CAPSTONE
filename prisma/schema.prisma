@@ -36,6 +36,8 @@ model User {
   projectProposal    ProjectProposal[]
   projectReports     ProjectReports[]
   systemLogs         SystemLogs[]
+  ticket             Ticket[]
+  resolution         Resolution[]
 }
 
 model SystemLogs {
@@ -97,6 +99,8 @@ model MeetingAgenda {
   fileSize   String
   fileType   String
   fileUrl    String
+  date       String?
+  time       String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   isArchived Boolean   @default(false)
@@ -107,6 +111,20 @@ model MeetingAgenda {
 }
 
 model MeetingMinutes {
+  id         String    @id @default(uuid())
+  name       String
+  fileSize   String
+  fileType   String
+  fileUrl    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+  uploadedBy String
+  user       User      @relation(fields: [uploadedBy], references: [id])
+}
+
+model Resolution {
   id         String    @id @default(uuid())
   name       String
   fileSize   String
@@ -194,4 +212,31 @@ enum UserRole {
   LYDO
   SK_OFFICIAL
   ADMIN
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model Ticket {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  attachment  String?
+  priority    Priority
+  status      TicketStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }

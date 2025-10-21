@@ -19,7 +19,7 @@ const MeetingAgendaModal = ({ userId }: { userId: string }) => {
       </Modal>
       <Button onClick={() => setIsOpen(true)} variant="primary">
         <PlusIcon className="size-4" />
-        Create Report
+        Create Agenda
       </Button>
     </>
   );

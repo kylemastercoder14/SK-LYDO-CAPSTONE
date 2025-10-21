@@ -65,9 +65,11 @@ const SingleFileUpload = ({
   const [fileType, setFileType] = useState<string | null>(null); // To store the type of the uploaded file
 
   useEffect(() => {
-    setFileUrl(defaultValue);
-    if (defaultValue) {
-      // Determine file type from defaultValue if it exists
+    // Reset the file URL first
+    setFileUrl(typeof defaultValue === "string" ? defaultValue : "");
+
+    // Only run the file-type detection if defaultValue is a string
+    if (typeof defaultValue === "string" && defaultValue.trim() !== "") {
       const fileExt = defaultValue.split(".").pop()?.toLowerCase();
       if (fileExt) {
         const mimeMap: { [key: string]: string } = {
@@ -93,6 +95,8 @@ const SingleFileUpload = ({
       } else {
         setFileType(null);
       }
+    } else {
+      setFileType(null);
     }
   }, [defaultValue]);
 

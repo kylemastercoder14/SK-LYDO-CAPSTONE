@@ -94,6 +94,24 @@ export const columns: ColumnDef<User>[] = [
     },
   },
   {
+    accessorKey: "officialType",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Role
+          <ChevronsUpDown className="h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const officialType = row.original.officialType || "N/A";
+      return <span>{officialType.toUpperCase().replace(/-/g, "_")}</span>;
+    },
+  },
+  {
     accessorKey: "barangay",
     header: ({ column }) => {
       return (

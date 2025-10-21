@@ -4,12 +4,12 @@ import React from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "./_components/data-table";
 import { columns } from "./_components/columns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import db from "@/lib/db";
 
 const Page = async () => {
   const data = await db.user.findMany({
     where: {
-      isActive: true,
       role: {
         not: "ADMIN",
       },
@@ -31,7 +31,18 @@ const Page = async () => {
         </Link>
       </div>
       <div className="mt-5">
-        <DataTable columns={columns} data={data} />
+        <Tabs defaultValue="active">
+          <TabsList>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="inactive">Inactive</TabsTrigger>
+          </TabsList>
+          <TabsContent value="active">
+            <DataTable columns={columns} data={data.filter((d) => d.isActive)} />
+          </TabsContent>
+          <TabsContent value="inactive">
+            <DataTable columns={columns} data={data.filter((d) => !d.isActive)} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

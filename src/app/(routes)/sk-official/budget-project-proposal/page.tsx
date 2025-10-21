@@ -50,7 +50,7 @@ const Page = async () => {
           <TabsContent value="approved">
             <DataTable
               columns={columns}
-              data={data.filter((report) => report.status === "In Progress" || report.status === "Completed")}
+              data={data.filter((report) => report.status === "In Progress" || report.status === "Completed" || report.status === "Approved")}
             />
           </TabsContent>
           <TabsContent value="pending">

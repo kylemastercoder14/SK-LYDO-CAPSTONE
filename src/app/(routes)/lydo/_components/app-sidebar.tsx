@@ -6,6 +6,7 @@ import {
   IconCopyCheck,
   IconDashboard,
   IconFolderCheck,
+  IconTrack,
   IconWallet,
 } from "@tabler/icons-react";
 
@@ -41,6 +42,11 @@ const data = {
       title: "Approved Budget & Project",
       url: "/lydo/approved-budget-project",
       icon: IconCopyCheck,
+    },
+    {
+      title: "Progress Project Tracking",
+      url: "/lydo/progress-project-tracking",
+      icon: IconTrack,
     },
     {
       title: "Annual Report",

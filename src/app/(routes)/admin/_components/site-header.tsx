@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getGreeting } from "@/lib/utils";
 import { NavUser } from "@/components/globals/nav-user";
 import { ModeToggle } from '@/components/globals/toggle-theme';
+import NotificationDropdown from './notification-dropdown';
 
 export function SiteHeader({ user }: { user: User | null }) {
   const [greeting, setGreeting] = useState(getGreeting());
@@ -31,6 +32,7 @@ export function SiteHeader({ user }: { user: User | null }) {
           {greeting}, {`${user?.username}` || "Anonymous"}!
         </h1>
         <div className="ml-auto flex items-center gap-2">
+          <NotificationDropdown />
           <ModeToggle />
           <NavUser
             user={{

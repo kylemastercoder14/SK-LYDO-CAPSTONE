@@ -5,6 +5,7 @@ import {
   IconDashboard,
   IconDatabase,
   IconFolderCheck,
+  IconTrack,
   IconWallet,
 } from "@tabler/icons-react";
 
@@ -40,6 +41,11 @@ const data = {
       title: "Meeting Agenda",
       url: "/sk-federation/meeting-agenda",
       icon: IconDatabase,
+    },
+    {
+      title: "Progress Project Tracking",
+      url: "/lydo/progress-project-tracking",
+      icon: IconTrack,
     },
   ],
 };

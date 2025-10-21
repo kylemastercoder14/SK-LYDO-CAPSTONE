@@ -285,7 +285,7 @@ const Footer = () => {
               <FaFacebook className="w-5 h-5" />
             </a>
             <a
-              href="mailto:dasma.lydo@gmail.com"
+              href="mailto:sangguniangkabataanpederasyon@gmail.com"
               target="_blank"
               title='Email'
               className="transition-colors"

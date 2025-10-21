@@ -5,6 +5,7 @@ import {
   IconDashboard,
   IconDatabase,
   IconFileDescription,
+  IconHelpCircle,
   IconUsersGroup,
 } from "@tabler/icons-react";
 
@@ -35,6 +36,11 @@ const data = {
       title: "System Logs",
       url: "/admin/system-logs",
       icon: IconFileDescription,
+    },
+    {
+      title: "Help Center",
+      url: "/admin/help-center",
+      icon: IconHelpCircle,
     },
     {
       title: "Data Backup",

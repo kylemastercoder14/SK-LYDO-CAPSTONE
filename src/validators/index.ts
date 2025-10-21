@@ -158,15 +158,56 @@ export const cbydpReportSchema = z.object({
   fileUrl: z.string().url({ message: "A valid file URL is required." }),
 });
 
-export const meetingAgendaSchema = z.object({
-  name: z.string().min(1, { message: "Meeting agenda name is required." }),
+export const meetingAgendaSchema = z
+  .object({
+    name: z.string().min(1, { message: "Meeting agenda name is required." }),
+    date: z.string().optional(),
+    time: z.string().optional(),
+    isManualTyping: z.boolean().default(false).optional(),
+    content: z.string().optional(),
+    fileSize: z.string().optional(),
+    fileType: z.string().optional(),
+    fileUrl: z.string().optional(), // keep it simple here
+  })
+  .superRefine((data, ctx) => {
+    if (data.isManualTyping) {
+      if (!data.content || data.content.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["content"],
+          message: "Content is required when manual typing is enabled.",
+        });
+      }
+    } else {
+      if (!data.fileUrl || data.fileUrl.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["fileUrl"],
+          message: "File upload is required when manual typing is disabled.",
+        });
+      } else {
+        try {
+          new URL(data.fileUrl); // validate proper URL only if it exists
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["fileUrl"],
+            message: "Invalid file URL",
+          });
+        }
+      }
+    }
+  });
+
+export const meetingMinutesSchema = z.object({
+  name: z.string().min(1, { message: "Minutes of meeting name is required." }),
   fileSize: z.string().min(1, { message: "File size is required." }),
   fileType: z.string().min(1, { message: "File type is required." }),
   fileUrl: z.string().url({ message: "A valid file URL is required." }),
 });
 
-export const meetingMinutesSchema = z.object({
-  name: z.string().min(1, { message: "Minutes of meeting name is required." }),
+export const resolutionSchema = z.object({
+  name: z.string().min(1, { message: "Resolution name is required." }),
   fileSize: z.string().min(1, { message: "File size is required." }),
   fileType: z.string().min(1, { message: "File type is required." }),
   fileUrl: z.string().url({ message: "A valid file URL is required." }),

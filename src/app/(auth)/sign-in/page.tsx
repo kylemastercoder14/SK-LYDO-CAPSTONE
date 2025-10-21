@@ -238,7 +238,7 @@ const Page = () => {
         <Header />
         <section className="auth-background">
           <div className="flex items-center px-80 pt-20 h-screen">
-            <Card className="w-full max-w-xl rounded-none bg-white dark:bg-[#30334e] shadow-xl px-6 py-6 border border-gray-100 dark:border-gray-700">
+            <Card className="w-full max-w-xl mx-auto rounded-none bg-white dark:bg-[#30334e] shadow-xl px-6 py-6 border border-gray-100 dark:border-gray-700">
               {/* Error Message */}
               {state?.message && !state.success && (
                 <div className="dark:bg-red-400/20 text-sm bg-red-600/20 text-red-700 py-3 justify-center dark:text-red-300 flex items-center gap-2 px-3 rounded-md mb-4">
