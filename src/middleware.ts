@@ -6,7 +6,7 @@ import { jwtVerify } from "jose";
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 // Define your public routes
-const PUBLIC_ROUTES = ["/", "/sign-in", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/sign-in", "/forgot-password", "/data-dictionary"];
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
