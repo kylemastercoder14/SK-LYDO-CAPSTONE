@@ -9,9 +9,9 @@ import Heading from "@/components/globals/heading";
 const Page = async ({
   searchParams,
 }: {
-  searchParams: { barangay?: string };
+  searchParams: Promise<{ barangay?: string }>;
 }) => {
-  const barangay = searchParams.barangay || null;
+  const { barangay } = await searchParams;
 
   const dashboardStats = await getDashboardStats(barangay ?? undefined);
 

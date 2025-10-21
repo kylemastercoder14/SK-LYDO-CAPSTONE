@@ -19,9 +19,9 @@ import FilterBarangay from '../_components/filter-barangay';
 const Page = async ({
   searchParams,
 }: {
-  searchParams: { barangay?: string };
+  searchParams: Promise<{ barangay?: string }>;
 }) => {
-  const barangay = searchParams.barangay || null;
+  const { barangay } = await searchParams;
 
   const user = await getServerSession();
 
