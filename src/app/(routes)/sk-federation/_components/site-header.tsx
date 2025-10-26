@@ -40,6 +40,7 @@ export function SiteHeader({ user }: { user: User | null }) {
                 "Guest",
               position: user?.role || "",
               avatar: user?.image || "",
+              barangay: user?.barangay || ""
             }}
           />
         </div>
