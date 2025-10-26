@@ -47,12 +47,25 @@ export function SKParticipationChart({
 }) {
   const [timeRange, setTimeRange] = React.useState("90d");
 
+  // 🧮 Group projects by date and include their titles
+  const groupedByDate = skParticipant.reduce<
+    Record<string, { count: number; titles: string[] }>
+  >((acc, proj) => {
+    const date = proj.createdAt.toISOString().split("T")[0];
+    if (!acc[date]) acc[date] = { count: 0, titles: [] };
+    acc[date].count += 1;
+    acc[date].titles.push(proj.title);
+    return acc;
+  }, {});
+
   // Transform DB data → chart data
-  const transformedData: ChartPoint[] = skParticipant.map((proj) => ({
-    date: proj.createdAt.toISOString().split("T")[0],
-    participants: Number(proj.participantsCount ?? 0),
-    title: proj.title,
-  }));
+  const transformedData: ChartPoint[] = Object.entries(groupedByDate).map(
+    ([date, { count, titles }]) => ({
+      date,
+      participants: count,
+      title: titles.join(", "), // Combine titles for tooltip display
+    })
+  );
 
   // Filter by time range
   const referenceDate = new Date();
@@ -71,10 +84,10 @@ export function SKParticipationChart({
   return (
     <Card className="@container/card">
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+        <div className="flex flex-1 flex-col justify-center gap-1 px-6">
           <CardTitle>Youth Participation</CardTitle>
           <CardDescription>
-            Number of SK participants per project
+            Number of SK participants per project (based on creation date)
           </CardDescription>
         </div>
         <div className="flex">
@@ -108,61 +121,91 @@ export function SKParticipationChart({
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="px-2 sm:p-6">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
-        >
-          <AreaChart data={filteredData}>
-            <defs>
-              <linearGradient id="fillParticipants" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-participants)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-participants)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })
-              }
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  }
-                  indicator="dot"
-                />
-              }
-            />
-            <Area
-              dataKey="participants"
-              type="natural"
-              fill="url(#fillParticipants)"
-              stroke="var(--color-participants)"
-            />
-          </AreaChart>
-        </ChartContainer>
+        {filteredData.length === 0 ? (
+          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            No participation data available.
+          </div>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[250px] w-full"
+          >
+            <AreaChart data={filteredData}>
+              <defs>
+                <linearGradient
+                  id="fillParticipants"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-participants)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-participants)"
+                    stopOpacity={0.1}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })
+                }
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => {
+                      const item = filteredData.find(
+                        (i) => i.date === value
+                      );
+                      return (
+                        <>
+                          <div>
+                            <strong>
+                              {new Date(value).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </strong>
+                          </div>
+                          {item?.title && (
+                            <div className="text-xs mt-1">
+                              <span className="font-medium">Projects:</span>{" "}
+                              {item.title}
+                            </div>
+                          )}
+                        </>
+                      );
+                    }}
+                    indicator="dot"
+                  />
+                }
+              />
+              <Area
+                dataKey="participants"
+                type="natural"
+                fill="url(#fillParticipants)"
+                stroke="var(--color-participants)"
+              />
+            </AreaChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

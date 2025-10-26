@@ -182,7 +182,9 @@ const NotificationDropdown = () => {
                     const statusColor =
                       proposal.status === "Pending"
                         ? "text-yellow-600 border-yellow-600"
-                        : proposal.status === "Approved"
+                        : proposal.status === "Approved" ||
+                          proposal.status === "Completed" ||
+                          proposal.status === "Accomplished"
                         ? "text-green-600 border-green-600"
                         : proposal.status === "Rejected"
                         ? "text-red-600 border-red-600"
@@ -237,6 +239,12 @@ const NotificationDropdown = () => {
                                 {proposal.reasonForRejection}
                               </div>
                             )}
+
+                          {proposal.status === "Completed" && (
+                            <div className="mt-2 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2 w-full">
+                              Please upload photo documentations
+                            </div>
+                          )}
                         </DropdownMenuItem>
                       </Link>
                     );

@@ -103,10 +103,10 @@ export const columns: ColumnDef<TicketWithUser>[] = [
       const status = row.original.status;
 
       const statusColors: Record<string, string> = {
-        Open: "bg-blue-100 text-blue-800",
-        Pending: "bg-yellow-100 text-yellow-800",
-        Resolved: "bg-green-100 text-green-800",
-        Closed: "bg-gray-200 text-gray-700",
+        OPEN: "bg-blue-100 text-blue-800",
+        PENDING: "bg-yellow-100 text-yellow-800",
+        RESOLVED: "bg-green-100 text-green-800",
+        CLOSED: "bg-gray-200 text-gray-700",
       };
 
       const color = statusColors[status] || "bg-gray-100 text-gray-800";
@@ -133,9 +133,9 @@ export const columns: ColumnDef<TicketWithUser>[] = [
       const priority = row.original.priority;
 
       const priorityColors: Record<string, string> = {
-        High: "bg-red-100 text-red-800",
-        Medium: "bg-orange-100 text-orange-800",
-        Low: "bg-green-100 text-green-800",
+        HIGH: "bg-red-100 text-red-800",
+        MEDIUM: "bg-orange-100 text-orange-800",
+        LOW: "bg-green-100 text-green-800",
       };
 
       const color = priorityColors[priority] || "bg-gray-100 text-gray-800";

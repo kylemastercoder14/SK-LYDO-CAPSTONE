@@ -152,6 +152,7 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
       switch (status) {
         case "Completed":
         case "Approved":
+        case "Accomplished":
           badgeVariant = "default";
           badgeColorClass = "bg-green-100 text-green-700 hover:bg-green-200";
           break;

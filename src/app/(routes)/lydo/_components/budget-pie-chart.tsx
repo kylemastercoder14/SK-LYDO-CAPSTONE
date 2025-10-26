@@ -2,7 +2,6 @@
 "use client";
 
 import { LabelList, Pie, PieChart } from "recharts";
-
 import {
   Card,
   CardContent,
@@ -19,14 +18,17 @@ import {
 } from "@/components/ui/chart";
 import { BudgetDistribution } from "@prisma/client";
 
-// 🎨 Assign fixed colors per committee (same as before)
+// 🎨 Fixed colors per committee
 const chartConfig: ChartConfig & {
   [key: string]: { label: string; color?: string };
 } = {
   Health: { label: "Health", color: "#1f77b6" },
   Education: { label: "Education", color: "#fe9900" },
   "Economic Empowerment": { label: "Economic Empowerment", color: "#2ba02d" },
-  "Social Inclusion & Equity": { label: "Social Inclusion & Equity", color: "#f5cf46" },
+  "Social Inclusion & Equity": {
+    label: "Social Inclusion & Equity",
+    color: "#f5cf46",
+  },
   "Peace & Security": { label: "Peace & Security", color: "#e54b4a" },
   Environment: { label: "Environment", color: "#354a5f" },
   Governance: { label: "Governance", color: "#9866bd" },
@@ -34,7 +36,7 @@ const chartConfig: ChartConfig & {
   "Other MOOE": { label: "Other MOOE", color: "#0199cb" },
 };
 
-// ✅ Custom Tooltip with currency + percentage
+// ✅ Tooltip component
 const CustomTooltip = ({ active, payload, total }: any) => {
   if (!active || !payload || !payload.length) return null;
 
@@ -64,7 +66,7 @@ export function BudgetPieChart({
     .map((b) => ({
       committee: b.allocated,
       amount: b.spent,
-      fill: chartConfig[b.allocated]?.color ?? "#ccc", // fallback color
+      fill: chartConfig[b.allocated]?.color ?? "#ccc",
     }));
 
   const total = chartData.reduce((sum, entry) => sum + entry.amount, 0);
@@ -79,38 +81,43 @@ export function BudgetPieChart({
       </CardHeader>
 
       <CardContent className="flex-1 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="[&_.recharts-pie-label-text]:fill-foreground mx-auto w-full aspect-square max-h-[350px] pb-0"
-        >
-          <PieChart>
-            <ChartTooltip content={<CustomTooltip total={total} />} />
-            <Pie
-              data={chartData}
-              dataKey="amount"
-              nameKey="committee"
-              label={({ value }) =>
-                value != null ? `₱${value.toLocaleString()}` : ""
-              }
-            />
-            <LabelList
-              dataKey="committee"
-              className="fill-background"
-              stroke="none"
-              fontSize={12}
-              formatter={(label) =>
-                typeof label === "string"
-                  ? chartConfig[label]?.label ?? label
-                  : label
-              }
-            />
-
-            <ChartLegend
-              content={<ChartLegendContent nameKey="committee" />}
-              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 mt-5 *:justify-start"
-            />
-          </PieChart>
-        </ChartContainer>
+        {chartData.length === 0 || total === 0 ? (
+          <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+            <p>No budget distribution data available</p>
+          </div>
+        ) : (
+          <ChartContainer
+            config={chartConfig}
+            className="[&_.recharts-pie-label-text]:fill-foreground mx-auto w-full aspect-square max-h-[350px] pb-0"
+          >
+            <PieChart>
+              <ChartTooltip content={<CustomTooltip total={total} />} />
+              <Pie
+                data={chartData}
+                dataKey="amount"
+                nameKey="committee"
+                label={({ value }) =>
+                  value != null ? `₱${value.toLocaleString()}` : ""
+                }
+              />
+              <LabelList
+                dataKey="committee"
+                className="fill-background"
+                stroke="none"
+                fontSize={12}
+                formatter={(label) =>
+                  typeof label === "string"
+                    ? chartConfig[label]?.label ?? label
+                    : label
+                }
+              />
+              <ChartLegend
+                content={<ChartLegendContent nameKey="committee" />}
+                className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 mt-5 *:justify-start"
+              />
+            </PieChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

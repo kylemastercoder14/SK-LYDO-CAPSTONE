@@ -109,7 +109,7 @@ const HelpCenter = ({ user }: { user: User }) => {
                 value={priority}
                 onValueChange={(val) => setValue("priority", val as any)}
               >
-                <SelectTrigger className='w-full'>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select priority level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -118,6 +118,18 @@ const HelpCenter = ({ user }: { user: User }) => {
                   <SelectItem value="HIGH">High</SelectItem>
                 </SelectContent>
               </Select>
+
+              <p className="text-xs text-muted-foreground mt-1">
+                ⚠️ Please choose{" "}
+                <span className="font-semibold text-red-600">
+                  High Priority
+                </span>{" "}
+                only if your issue is urgent or critical (e.g., system not
+                working, data loss, or emergency concern). For general questions
+                or minor issues, select{" "}
+                <span className="font-semibold">Low</span> or{" "}
+                <span className="font-semibold">Medium</span>.
+              </p>
             </div>
 
             {/* Attachment */}

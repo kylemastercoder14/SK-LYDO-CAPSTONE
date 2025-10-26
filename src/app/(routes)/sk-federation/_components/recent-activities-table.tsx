@@ -68,7 +68,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "barangay",
     header: "Barangay",
-    cell: ({ row }) => <div className="w-32">{row.original.barangay}</div>,
+    cell: ({ row }) => <div className="w-32">{row.original.barangay.toUpperCase().replace(/-/g, " ")}</div>,
   },
   {
     accessorKey: "action",

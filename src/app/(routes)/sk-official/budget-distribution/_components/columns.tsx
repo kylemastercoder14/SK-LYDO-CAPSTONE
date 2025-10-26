@@ -126,8 +126,8 @@ export const columns: ColumnDef<BudgetDistribution>[] = [
           badgeColorClass = "bg-green-100 text-green-700 hover:bg-green-200";
           break;
         case false:
-          badgeVariant = "destructive";
-          badgeColorClass = "bg-red-100 text-red-700 hover:bg-red-200";
+          badgeVariant = "default";
+          badgeColorClass = "bg-yellow-100 text-yellow-700 hover:bg-yellow-200";
           break;
         default:
           badgeVariant = "outline";

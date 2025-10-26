@@ -3,8 +3,6 @@ import StatisticsCard from "@/components/globals/statistics-card";
 import db from "@/lib/db";
 import {
   calculateMetrics,
-  getMonthStartEnd,
-  getPreviousMonthStartEnd,
 } from "@/lib/utils";
 import { ReusableChartAreaInteractive } from "@/components/globals/area-chart";
 import { ChartDataPoint, ProposalData } from "@/types/types";
@@ -27,17 +25,6 @@ const Page = async () => {
     redirect("/unauthorized");
   }
 
-  const now = new Date();
-  const { start: currentMonthStart, end: currentMonthEnd } =
-    getMonthStartEnd(now);
-  const { start: previousMonthStart, end: previousMonthEnd } =
-    getPreviousMonthStartEnd(now);
-
-  // Calculate the start date for the last 3 months
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-  threeMonthsAgo.setDate(1); // Start from the first day of the month
-
   // Fetch counts for current and previous month for each report type
   const [
     projectReportsCurrent,
@@ -48,57 +35,17 @@ const Page = async () => {
     cbydpPrevious,
     meetingAgendaCurrent,
     meetingAgendaPrevious,
-    // Fetch project proposals for the last 3 months
     projectProposalsData,
   ] = await Promise.all([
-    db.projectReports.count({
-      where: {
-        createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
-      },
-    }),
-    db.projectReports.count({
-      where: {
-        createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
-      },
-    }),
-    db.budgetReports.count({
-      where: {
-        createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
-      },
-    }),
-    db.budgetReports.count({
-      where: {
-        createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
-      },
-    }),
-    db.cBYDP.count({
-      where: {
-        createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
-      },
-    }),
-    db.cBYDP.count({
-      where: {
-        createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
-      },
-    }),
-    db.meetingAgenda.count({
-      where: {
-        createdAt: { gte: currentMonthStart, lt: currentMonthEnd },
-      },
-    }),
-    db.meetingAgenda.count({
-      where: {
-        createdAt: { gte: previousMonthStart, lt: previousMonthEnd },
-      },
-    }),
-    // Fetch project proposals from the last 3 months
+    db.projectReports.count(),
+    db.projectReports.count(),
+    db.budgetReports.count(),
+    db.budgetReports.count(),
+    db.cBYDP.count(),
+    db.cBYDP.count(),
+    db.meetingAgenda.count(),
+    db.meetingAgenda.count(),
     db.projectProposal.findMany({
-      where: {
-        createdAt: {
-          gte: threeMonthsAgo,
-          lte: now,
-        },
-      },
       select: {
         createdAt: true,
         status: true,
@@ -128,49 +75,47 @@ const Page = async () => {
 
   // Process the project proposals data to create chart data
   const processChartData = (proposals: ProposalData[]): ChartDataPoint[] => {
-    // Create a map to store daily counts
-    const dailyCounts = new Map();
+    // Create a map to count approved/rejected proposals per day
+    const dailyCounts = new Map<
+      string,
+      { approved: number; rejected: number }
+    >();
 
-    // Initialize the map with dates for the last 3 months
-    const startDate = new Date(threeMonthsAgo);
-    const endDate = new Date(now);
-
-    for (
-      let d = new Date(startDate);
-      d <= endDate;
-      d.setDate(d.getDate() + 1)
-    ) {
-      const dateKey = d.toISOString().split("T")[0];
-      dailyCounts.set(dateKey, { approved: 0, rejected: 0 });
-    }
-
-    // Count proposals by date and status
-    proposals.forEach((proposal: ProposalData) => {
+    // Loop through all proposals
+    proposals.forEach((proposal) => {
       const dateKey = proposal.createdAt.toISOString().split("T")[0];
-      if (dailyCounts.has(dateKey)) {
-        const counts = dailyCounts.get(dateKey);
-        if (proposal.status === "In Progress" || proposal.status === "Completed") {
-          counts.approved += 1;
-        } else if (proposal.status === "Rejected") {
-          counts.rejected += 1;
-        }
+
+      if (!dailyCounts.has(dateKey)) {
+        dailyCounts.set(dateKey, { approved: 0, rejected: 0 });
+      }
+
+      const counts = dailyCounts.get(dateKey)!;
+      if (
+        proposal.status === "In Progress" ||
+        proposal.status === "Completed"
+      ) {
+        counts.approved += 1;
+      } else if (proposal.status === "Rejected") {
+        counts.rejected += 1;
       }
     });
 
-    // Convert to chart data format
-    return Array.from(dailyCounts.entries()).map(([date, counts]) => ({
-      date,
-      approved: counts.approved,
-      rejected: counts.rejected,
-    }));
+    // Convert to sorted array (chronological order)
+    return Array.from(dailyCounts.entries())
+      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+      .map(([date, counts]) => ({
+        date,
+        approved: counts.approved,
+        rejected: counts.rejected,
+      }));
   };
 
   const chartData = processChartData(projectProposalsData);
 
   const chartConfig = {
     proposals: { label: "Proposals" },
-    approved: { label: "Approved", color: "var(--primary)" },
-    rejected: { label: "Rejected", color: "var(--secondary)" },
+    approved: { label: "Approved", color: "#198754" },
+    rejected: { label: "Rejected", color: "var(--destructive)" },
   };
 
   const officialsTable = await db.user.findMany({

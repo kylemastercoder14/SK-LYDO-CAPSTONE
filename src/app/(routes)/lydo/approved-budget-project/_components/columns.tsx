@@ -17,14 +17,20 @@ const ExpandableDescription = ({ description }: { description: string }) => {
   const maxLength = 50;
 
   if (description.length <= maxLength) {
-    return <span className="ml-2.5">{description}</span>;
+    return (
+      <div
+        className="ml-2.5"
+        dangerouslySetInnerHTML={{ __html: description }}
+      />
+    );
   }
 
   const shortenedDescription = description.substring(0, maxLength) + "...";
 
   return (
     <div className="ml-2.5 max-w-sm whitespace-normal break-words">
-      {isExpanded ? description : shortenedDescription}
+      <div dangerouslySetInnerHTML={{__html: isExpanded ? description : shortenedDescription}}/>
+
       <Button
         variant="link"
         size="sm"

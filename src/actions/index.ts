@@ -22,12 +22,7 @@ import {
 } from "@/validators";
 import { ROLE_CONFIG, UserRole } from "@/lib/config";
 import z from "zod";
-import {
-  calcTrend,
-  FormState,
-  FormStateForgot,
-  generateInsights,
-} from "@/lib/utils";
+import { FormState, FormStateForgot } from "@/lib/utils";
 import {
   BudgetDistributionFormValues,
   BudgetReportFormValues,
@@ -41,6 +36,8 @@ import {
 } from "@/types/types";
 import { OfficialType } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
@@ -1020,6 +1017,117 @@ export async function retrieveProjectProposal(id: string, userId: string) {
   }
 }
 
+export async function uploadProjectAttachments(formData: FormData) {
+  try {
+    const projectId = formData.get("projectId") as string;
+    const files = formData.getAll("files") as File[];
+
+    if (!projectId || files.length === 0) {
+      throw new Error("Missing project ID or files.");
+    }
+
+    // Ensure upload directory exists
+    const uploadDir = path.join(process.cwd(), "public/uploads", projectId);
+    await mkdir(uploadDir, { recursive: true });
+
+    const uploadedFiles: string[] = [];
+
+    // Save each uploaded file
+    for (const file of files) {
+      const bytes = Buffer.from(await file.arrayBuffer());
+      const filePath = path.join(uploadDir, file.name);
+      await writeFile(filePath, bytes);
+      uploadedFiles.push(`/uploads/${projectId}/${file.name}`);
+    }
+
+    // Fetch the existing attachments
+    const existingProposal = await db.projectProposal.findUnique({
+      where: { id: projectId },
+      select: { attachments: true },
+    });
+
+    // Combine old + new attachments
+    const allAttachments = [
+      ...(existingProposal?.attachments || []),
+      ...uploadedFiles,
+    ];
+
+    // Update attachments field
+    await db.projectProposal.update({
+      where: { id: projectId },
+      data: { attachments: allAttachments },
+    });
+
+    return { success: true, count: uploadedFiles.length };
+  } catch (error) {
+    console.error("Upload error:", error);
+    return { success: false, error: "Failed to upload files." };
+  }
+}
+
+export async function markAsAccomplished(projectId: string) {
+  try {
+    await db.projectProposal.update({
+      where: { id: projectId },
+      data: { status: "Accomplished" },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Mark as accomplished error:", error);
+    return { success: false, error: "Failed to mark as accomplished." };
+  }
+}
+
+export async function uploadHeaderFooterAction(formData: FormData) {
+  try {
+    const barangay = formData.get("barangay") as string;
+    const header = formData.get("header") as File | null;
+    const footer = formData.get("footer") as File | null;
+
+    if (!barangay) throw new Error("Barangay is required.");
+
+    const uploadDir = path.join(process.cwd(), "public/assets", barangay);
+    await mkdir(uploadDir, { recursive: true });
+
+    let headerUrl: string | null = null;
+    let footerUrl: string | null = null;
+
+    if (header) {
+      const headerPath = path.join(uploadDir, header.name);
+      await writeFile(headerPath, Buffer.from(await header.arrayBuffer()));
+      headerUrl = `/assets/${barangay}/${header.name}`;
+    }
+
+    if (footer) {
+      const footerPath = path.join(uploadDir, footer.name);
+      await writeFile(footerPath, Buffer.from(await footer.arrayBuffer()));
+      footerUrl = `/assets/${barangay}/${footer.name}`;
+    }
+
+    await db.assets.upsert({
+      where: { barangay },
+      update: {
+        header: headerUrl ?? undefined,
+        footer: footerUrl ?? undefined,
+      },
+      create: {
+        barangay,
+        header: headerUrl,
+        footer: footerUrl,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Header and footer updated successfully!",
+    };
+  } catch (error) {
+    console.error("Upload header/footer error:", error);
+    return { success: false, message: "Failed to upload header/footer." };
+  }
+}
+
 export async function createCBYDPReport(
   data: CBYDPReportFormValues,
   userId: string
@@ -1478,75 +1586,40 @@ export async function assignCommittee(formData: FormData) {
 }
 
 export async function getDashboardStats(barangay?: string) {
-  const now = new Date();
-  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
   // 📊 Total SK Members
-  const currentMembers = await db.user.count({
+  const totalMembers = await db.user.count({
     where: {
-      role: "SK_OFFICIAL",
       isActive: true,
-      createdAt: { gte: startOfThisMonth },
       barangay,
     },
   });
-  const previousMembers = await db.user.count({
-    where: {
-      role: "SK_OFFICIAL",
-      isActive: true,
-      createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
-      barangay,
-    },
-  });
-  const membersTrend = calcTrend(currentMembers, previousMembers);
-  const membersInsights = generateInsights(
-    "Total SK Members",
-    membersTrend.percentage,
-    membersTrend.trending as "up" | "down"
-  );
 
-  // 📊 Active Programs
-  const currentPrograms = await db.projectProposal.count({
+  // 📊 Accomplished Programs (All-time)
+  const totalPrograms = await db.projectProposal.count({
     where: {
+      status: "Accomplished",
       user: {
-        barangay,
+        ...(barangay && { barangay }),
       },
-      status: "In Progress",
-      createdAt: { gte: startOfThisMonth },
     },
   });
-  const previousPrograms = await db.projectProposal.count({
-    where: {
-      status: "In Progress",
-      user: {
-        barangay,
-      },
-      createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
-    },
-  });
-  const programsTrend = calcTrend(currentPrograms, previousPrograms);
-  const programsInsights = generateInsights(
-    "Active Programs",
-    programsTrend.percentage,
-    programsTrend.trending as "up" | "down"
-  );
 
-  // 📊 Budget Utilization
+  // 📊 Budget Utilization (All-time)
   const totalBudget = await db.projectProposal.aggregate({
     _sum: { budget: true },
     where: {
       user: {
-        barangay,
+        ...(barangay && { barangay }),
       },
     },
   });
+
   const approvedBudget = await db.projectProposal.aggregate({
     _sum: { budget: true },
     where: {
-      status: "Approved",
+      status: "Accomplished",
       user: {
-        barangay,
+        ...(barangay && { barangay }),
       },
     },
   });
@@ -1556,80 +1629,39 @@ export async function getDashboardStats(barangay?: string) {
       ? (approvedBudget._sum.budget / totalBudget._sum.budget) * 100
       : 0;
 
-  // Assume last month’s utilization ~ proportional to last month’s approvals
-  const lastMonthApproved = await db.projectProposal.aggregate({
-    _sum: { budget: true },
+  // 📊 Upcoming Events (All future events)
+  const today = new Date().toISOString().split("T")[0];
+  const upcomingEvents = await db.events.count({
     where: {
-      status: "Approved",
-      user: {
-        barangay,
-      },
-      createdAt: { gte: startOfLastMonth, lt: startOfThisMonth },
+      ...(barangay && { barangay }),
+      startDate: { gte: today },
     },
   });
-  const lastMonthUtilization = totalBudget._sum.budget
-    ? ((lastMonthApproved._sum.budget || 0) / totalBudget._sum.budget) * 100
-    : 0;
-
-  const budgetTrend = calcTrend(utilization, lastMonthUtilization);
-  const budgetInsights = generateInsights(
-    "Budget Utilization",
-    budgetTrend.percentage,
-    budgetTrend.trending as "up" | "down"
-  );
-
-  // 📊 Upcoming Events
-  const currentEvents = await db.events.count({
-    where: { barangay, startDate: { gte: now.toISOString().split("T")[0] } },
-  });
-  const previousEvents = await db.events.count({
-    where: {
-      barangay,
-      startDate: {
-        gte: startOfLastMonth.toISOString().split("T")[0],
-        lt: startOfThisMonth.toISOString().split("T")[0],
-      },
-    },
-  });
-  const eventsTrend = calcTrend(currentEvents, previousEvents);
-  const eventsInsights = generateInsights(
-    "Upcoming Events",
-    eventsTrend.percentage,
-    eventsTrend.trending as "up" | "down"
-  );
 
   return [
     {
       title: "Total SK Members",
-      data: currentMembers,
-      trending: membersTrend.trending as "up" | "down",
-      percentage: membersTrend.percentage,
-      description: membersInsights.description,
-      recommendation: membersInsights.recommendation,
+      data: totalMembers,
+      description: "Total number of active users in the system.",
+      recommendation: "Maintain engagement and new registrations.",
     },
     {
-      title: "Active Programs",
-      data: currentPrograms,
-      trending: programsTrend.trending as "up" | "down",
-      percentage: programsTrend.percentage,
-      description: programsInsights.description,
-      recommendation: programsInsights.recommendation,
+      title: "Accomplished Programs",
+      data: totalPrograms,
+      description: "All completed SK programs under your barangay.",
+      recommendation: "Track progress to ensure timely completion.",
     },
     {
       title: "Budget Utilization",
       data: `${utilization.toFixed(1)}%`,
-      trending: budgetTrend.trending as "up" | "down",
-      percentage: budgetTrend.percentage,
-      description: budgetInsights.description,
-      recommendation: budgetInsights.recommendation,
+      description: "Percentage of budgets over total proposals.",
+      recommendation: "Ensure proper allocation and tracking of funds.",
     },
     {
       title: "Upcoming Events",
-      data: currentEvents,
-      trending: eventsTrend.trending as "up" | "down",
-      percentage: eventsTrend.percentage,
-      description: eventsInsights.description,
-      recommendation: eventsInsights.recommendation,
+      data: upcomingEvents,
+      description: "Number of events that have not yet started.",
+      recommendation: "Prepare logistics for upcoming events.",
     },
   ];
 }
