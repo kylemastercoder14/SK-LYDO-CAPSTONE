@@ -9,8 +9,8 @@ const Footer = () => {
     <footer className="dark:bg-[#41456b] bg-[#e7e7e781] pt-10 dark:text-white overflow-hidden relative z-1 text-black">
       <div className="size-[800px] absolute rounded-full opacity-20 -bottom-80 -z-1 right-10">
         <Image
-          src="/lydo-logo.jpg"
-          alt="LYDO"
+          src="/sk-fed.png"
+          alt="SK FEDERATION"
           fill
           className="size-full rounded-full"
         />
@@ -31,11 +31,11 @@ const Footer = () => {
                   />
                 </div>
                 <span className="ml-2 text-sm uppercase font-medium">
-                  Local Youth Development Office
+                  city of dasmarinas
                 </span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                The Local Youth Development Office serves as the advocate of the
+                The SK Federation serves as the advocate of the
                 youth, championing policies and programs that prioritize their
                 needs and empower their voices in the community.
               </p>
@@ -271,7 +271,7 @@ const Footer = () => {
               />
             </div>
             <span>
-              ©2025 Copyright 2025 Local Youth Development Office - City of
+              ©2025 Copyright 2025 SK Federation - City of
               Dasmariñas | All Rights Reserved
             </span>
           </div>

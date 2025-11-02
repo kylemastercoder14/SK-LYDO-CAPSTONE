@@ -120,6 +120,8 @@ export const projectProposalSchema = z
       .number()
       .min(0, { message: "Budget must be a positive number." }),
     fileUrl: z.string().optional(), // keep it simple here
+    isThereCollaboration: z.boolean().default(false).optional(),
+    committee: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.isManualTyping) {
@@ -149,10 +151,25 @@ export const projectProposalSchema = z
         }
       }
     }
+    // Validate committee is required when collaboration is enabled
+    if (data.isThereCollaboration && (!data.committee || data.committee.trim() === "")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["committee"],
+        message: "Committee is required when collaboration is enabled.",
+      });
+    }
   });
 
 export const cbydpReportSchema = z.object({
   name: z.string().min(1, { message: "CBYDP name is required." }),
+  fileSize: z.string().min(1, { message: "File size is required." }),
+  fileType: z.string().min(1, { message: "File type is required." }),
+  fileUrl: z.string().url({ message: "A valid file URL is required." }),
+});
+
+export const abyipReportSchema = z.object({
+  name: z.string().min(1, { message: "ABYIP name is required." }),
   fileSize: z.string().min(1, { message: "File size is required." }),
   fileType: z.string().min(1, { message: "File type is required." }),
   fileUrl: z.string().url({ message: "A valid file URL is required." }),
@@ -278,3 +295,27 @@ export const eventSchema = z
       }
     }
   });
+
+export const profileUpdateSchema = z.object({
+  image: z
+    .string()
+    .refine(
+      (val) => !val || val === "" || z.string().url().safeParse(val).success,
+      {
+        message: "Image must be a valid URL",
+      }
+    )
+    .optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.trim() === "" || val.length >= 6, {
+      message: "Password must be at least 6 characters",
+    }),
+  bio: z.string().optional(),
+  securityQuestion: z.string().optional(),
+  securityAnswer: z.string().optional(),
+});

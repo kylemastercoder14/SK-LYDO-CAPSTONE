@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "SANGGUNIANG KABATAAN FEDERATION OF THE CITY OF DASMARIÑAS",
   description:
     "DEVELOPMENT OF AN ADMINISTRATIVE OPERATION SYSTEM FOR SANGGUNIANG KABATAAN FEDERATION OF THE CITY OF DASMARIÑAS",
+  icons: {
+    icon: "/sk-fed.png"
+  }
 };
 
 export default function RootLayout({

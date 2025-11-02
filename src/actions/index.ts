@@ -8,6 +8,7 @@ import {
   budgetDistributionSchema,
   budgetReportSchema,
   cbydpReportSchema,
+  abyipReportSchema,
   eventSchema,
   loginSchema,
   meetingAgendaSchema,
@@ -15,6 +16,7 @@ import {
   passwordResetSchema,
   projectProposalSchema,
   projectReportSchema,
+  profileUpdateSchema,
   registerSchema,
   resolutionSchema,
   securitySchema,
@@ -27,6 +29,7 @@ import {
   BudgetDistributionFormValues,
   BudgetReportFormValues,
   CBYDPReportFormValues,
+  ABYIPReportFormValues,
   EventFormValues,
   MeetingAgendaFormValues,
   MinutesMeetingFormValues,
@@ -508,6 +511,107 @@ export async function updateUserAccount(
   }
 }
 
+export async function updateUserProfile(
+  values: z.infer<typeof profileUpdateSchema>,
+  userId: string
+) {
+  try {
+    const validatedData = profileUpdateSchema.parse(values);
+    const {
+      image,
+      firstName,
+      lastName,
+      username,
+      password,
+      bio,
+      securityQuestion,
+      securityAnswer,
+    } = validatedData;
+
+    // Check if username already exists for another user
+    if (username) {
+      const existingUser = await db.user.findFirst({
+        where: {
+          username,
+          NOT: { id: userId },
+        },
+      });
+
+      if (existingUser) {
+        return {
+          success: false,
+          error: "Username already exists",
+        };
+      }
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+
+    if (image !== undefined) {
+      updateData.image = image || null;
+    }
+    if (firstName !== undefined) {
+      updateData.firstName = firstName || null;
+    }
+    if (lastName !== undefined) {
+      updateData.lastName = lastName || null;
+    }
+    if (username !== undefined) {
+      updateData.username = username;
+    }
+    if (bio !== undefined) {
+      updateData.bio = bio || null;
+    }
+    if (securityQuestion !== undefined) {
+      updateData.securityQuestion = securityQuestion || null;
+    }
+
+    // Hash password if provided and not empty
+    if (password && password.trim() !== "") {
+      updateData.password = await hash(password, 10);
+    }
+
+    // Hash security answer if provided and not empty
+    if (securityAnswer && securityAnswer.trim() !== "") {
+      updateData.securityAnswer = await hash(securityAnswer, 10);
+    }
+
+    // Update the user profile
+    await db.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    // Log the activity
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "updateProfile",
+        details: `User profile updated by user ${userId}`,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Profile updated successfully",
+    };
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error:
+          "Validation failed: " + error.errors.map((e) => e.message).join(", "),
+      };
+    }
+    return {
+      success: false,
+      error: "Failed to update profile",
+    };
+  }
+}
+
 export async function createProjectReport(
   data: ProjectReportFormValues,
   userId: string
@@ -806,6 +910,74 @@ export async function retrieveBudgetReport(id: string, userId: string) {
   }
 }
 
+export async function archiveAbyipReport(id: string, userId: string) {
+  try {
+    const existingReport = await db.aBYIP.findUnique({
+      where: { id },
+    });
+    if (!existingReport || existingReport.uploadedBy !== userId) {
+      throw new Error("Unauthorized to delete this report.");
+    }
+
+    await db.aBYIP.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "archiveABYIPReport",
+        details: `ABYIP report "${
+          existingReport.name
+        }" archived by user ${userId} on ${new Date().toISOString()}`,
+      },
+    });
+
+    return { message: "ABYIP report archived successfully." };
+  } catch (error) {
+    console.error(`Error archiving aBYIP report with ID ${id}:`, error);
+    throw new Error("Failed to archive aBYIP report.");
+  }
+}
+
+export async function retrieveAbyipReport(id: string, userId: string) {
+  try {
+    const existingReport = await db.aBYIP.findUnique({
+      where: { id },
+    });
+    if (!existingReport || existingReport.uploadedBy !== userId) {
+      throw new Error("Unauthorized to retrieve this report.");
+    }
+
+    await db.aBYIP.update({
+      where: { id },
+      data: {
+        isArchived: false,
+        archivedAt: null,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "retrieveABYIPReport",
+        details: `ABYIP report "${
+          existingReport.name
+        }" retrieved by user ${userId} on ${new Date().toISOString()}`,
+      },
+    });
+
+    return { message: "ABYIP report retrieved successfully." };
+  } catch (error) {
+    console.error(`Error retrieving aBYIP report with ID ${id}:`, error);
+    throw new Error("Failed to retrieve aBYIP report.");
+  }
+}
+
 export async function createProjectProposal(
   data: ProjectProposalFormValues,
   userId: string
@@ -820,7 +992,11 @@ export async function createProjectProposal(
         fileUrl: validatedData.fileUrl as string,
         description: validatedData.content as string,
         createdBy: userId,
-      },
+        ...(validatedData.isThereCollaboration !== undefined && {
+          isThereCollaboration: validatedData.isThereCollaboration,
+        }),
+        ...(validatedData.committee && { committee: validatedData.committee }),
+      } as any,
     });
 
     await db.systemLogs.create({
@@ -865,7 +1041,13 @@ export async function updateProjectProposal(
         budget: validatedData.budget,
         fileUrl: validatedData.fileUrl as string,
         description: validatedData.content as string,
-      },
+        ...(validatedData.isThereCollaboration !== undefined && {
+          isThereCollaboration: validatedData.isThereCollaboration,
+        }),
+        ...(validatedData.committee !== undefined && {
+          committee: validatedData.committee || null
+        }),
+      } as any,
     });
 
     await db.systemLogs.create({
@@ -1128,6 +1310,64 @@ export async function uploadHeaderFooterAction(formData: FormData) {
   }
 }
 
+export async function uploadBarangayBannerAction(formData: FormData) {
+  try {
+    const barangay = formData.get("barangay") as string;
+    const banner = formData.get("banner") as File | null;
+    const userId = formData.get("userId") as string;
+
+    if (!barangay) throw new Error("Barangay is required.");
+    if (!banner) throw new Error("Banner image is required.");
+
+    const uploadDir = path.join(process.cwd(), "public/assets", barangay);
+    await mkdir(uploadDir, { recursive: true });
+
+    let bannerUrl: string | null = null;
+
+    if (banner) {
+      const bannerPath = path.join(uploadDir, `banner_${banner.name}`);
+      await writeFile(bannerPath, Buffer.from(await banner.arrayBuffer()));
+      bannerUrl = `/assets/${barangay}/banner_${banner.name}`;
+    }
+
+    await db.assets.upsert({
+      where: { barangay },
+      update: {
+        barangayBanner: bannerUrl ?? undefined,
+      },
+      create: {
+        barangay,
+        barangayBanner: bannerUrl,
+      },
+    });
+
+    // Log the activity if userId is provided
+    if (userId) {
+      await db.systemLogs.create({
+        data: {
+          userId,
+          action: "uploadBarangayBanner",
+          details: `Barangay banner uploaded for ${barangay}`,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      message: "Barangay banner updated successfully!",
+    };
+  } catch (error) {
+    console.error("Upload barangay banner error:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to upload barangay banner.",
+    };
+  }
+}
+
 export async function createCBYDPReport(
   data: CBYDPReportFormValues,
   userId: string
@@ -1269,6 +1509,82 @@ export async function retrieveCBYDPReport(id: string, userId: string) {
   } catch (error) {
     console.error(`Error retrieving CBYDP report with ID ${id}:`, error);
     throw new Error("Failed to retrieve CBYDP report.");
+  }
+}
+
+export async function createABYIPReport(
+  data: ABYIPReportFormValues,
+  userId: string
+) {
+  try {
+    const validatedData = abyipReportSchema.parse(data);
+
+    const newReport = await db.aBYIP.create({
+      data: {
+        ...validatedData,
+        uploadedBy: userId,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "createABYIPReport",
+        details: `ABYIP report "${newReport.name}" created by user ${userId}`,
+      },
+    });
+
+    return newReport;
+  } catch (error) {
+    console.error("Error creating ABYIP report:", error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to create ABYIP report.");
+  }
+}
+
+export async function updateABYIPReport(
+  id: string,
+  data: ABYIPReportFormValues,
+  userId: string
+) {
+  try {
+    const validatedData = abyipReportSchema.parse(data);
+    const existingReport = await db.aBYIP.findUnique({
+      where: { id },
+    });
+
+    if (!existingReport || existingReport.uploadedBy !== userId) {
+      throw new Error("Unauthorized to update this ABYIP report.");
+    }
+
+    const updatedReport = await db.aBYIP.update({
+      where: { id },
+      data: {
+        ...validatedData,
+      },
+    });
+
+    await db.systemLogs.create({
+      data: {
+        userId,
+        action: "updateABYIPReport",
+        details: `ABYIP report "${updatedReport.name}" updated by user ${userId}`,
+      },
+    });
+
+    return updatedReport;
+  } catch (error) {
+    console.error(`Error updating ABYIP report with ID ${id}:`, error);
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        "Validation failed: " + error.errors.map((e) => e.message).join(", ")
+      );
+    }
+    throw new Error("Failed to update ABYIP report.");
   }
 }
 

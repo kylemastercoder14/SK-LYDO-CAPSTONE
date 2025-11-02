@@ -38,7 +38,18 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json(projects);
+    // Map projects to include collaboration fields (if they exist in DB)
+    const mappedProjects = projects.map((project: any) => ({
+      id: project.id,
+      title: project.title,
+      status: project.status,
+      createdBy: project.createdBy,
+      isThereCollaboration: project.isThereCollaboration ?? false,
+      committee: project.committee ?? null,
+      user: project.user,
+    }));
+
+    return NextResponse.json(mappedProjects);
   } catch (error) {
     console.error("Error fetching projects:", error);
     return NextResponse.json(

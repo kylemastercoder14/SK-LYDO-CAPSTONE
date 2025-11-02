@@ -12,6 +12,8 @@ import { redirect } from "next/navigation";
 import { RecentActivitiesTable } from "../_components/recent-activities-table";
 import Heading from "@/components/globals/heading";
 import FilterBarangay from "../_components/filter-barangay";
+import Image from "next/image";
+import { OfficialsTable } from "../_components/officials-table";
 
 const Page = async ({
   searchParams,
@@ -260,6 +262,38 @@ const Page = async ({
     );
   }
 
+  let barangayBanner;
+  let formattedOfficials: { id: string; name: string; position: string; committee: string; }[] = [];
+
+  const officialsTable = await db.user.findMany({
+    where: {
+      barangay: user.barangay as string,
+      role: {
+        notIn: ["ADMIN", "LYDO", "SK_FEDERATION"],
+      },
+    },
+  });
+
+  if (barangay) {
+    barangayBanner = await db.assets.findFirst({
+      where: {
+        barangay: barangay as string,
+      },
+    });
+    formattedOfficials = officialsTable.map((official) => {
+      const displayName =
+        official.firstName || official.lastName
+          ? `${official.firstName ?? ""} ${official.lastName ?? ""}`.trim()
+          : official.username; // fallback if no first/last name
+      return {
+        id: official.id,
+        name: displayName,
+        position: official.officialType || "Unknown",
+        committee: official.committee || "Unrequired",
+      };
+    });
+  }
+
   return (
     <div className="p-5">
       <div className="flex items-center justify-between">
@@ -269,6 +303,24 @@ const Page = async ({
         />
         <FilterBarangay />
       </div>
+      {barangayBanner?.barangayBanner && (
+        <div className="grid lg:grid-cols-5 grid-cols-1 gap-5 mt-5">
+          <div className="relative lg:col-span-3 w-full aspect-video rounded-md h-[450px]">
+            <Image
+              src={barangayBanner?.barangayBanner}
+              alt="Barangay banner"
+              fill
+              className="object-contain rounded-md"
+            />
+          </div>
+          <div
+            className="lg:col-span-2"
+          >
+            <OfficialsTable data={formattedOfficials ?? []} />
+          </div>
+        </div>
+      )}
+
       <div className="grid mt-5 lg:grid-cols-4 grid-cols-1 gap-5">
         <StatisticsCard title="Project Reports" {...projectReportsMetrics} />
         <StatisticsCard title="Budget Reports" {...budgetReportsMetrics} />

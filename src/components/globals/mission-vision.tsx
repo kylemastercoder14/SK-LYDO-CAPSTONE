@@ -16,7 +16,7 @@ const MissionVisionSection = () => {
           </h4>
           <p className='text-base md:text-lg text-zinc-800 dark:text-zinc-200'>
             The Sangguniang Kabataan Web Portal is exclusively tailored for SK,
-            LYDO, and Federation, providing easy access to essential
+            CYDO, and Federation, providing easy access to essential
             information, templates, and forms and allowing them to submit
             reports. It offers opportunities for continuing training and skill
             development through various courses, ensuring continuous growth and

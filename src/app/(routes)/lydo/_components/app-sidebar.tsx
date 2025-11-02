@@ -29,13 +29,13 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Budget Reports",
-      url: "/lydo/budget-reports",
+      title: "ABYIP Reports",
+      url: "/lydo/abyip",
       icon: IconWallet,
     },
     {
-      title: "Project Reports",
-      url: "/lydo/project-reports",
+      title: "CBYDP Reports",
+      url: "/lydo/cbydp",
       icon: IconFolderCheck,
     },
     {

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import {
@@ -23,8 +24,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useRouter } from "next/navigation";
-import { logoutAction, uploadHeaderFooterAction } from "@/actions";
+import { useRouter, usePathname } from "next/navigation";
+import { logoutAction, uploadHeaderFooterAction, uploadBarangayBannerAction } from "@/actions";
 import { Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -38,12 +39,29 @@ export function NavUser({
     position: string;
     avatar: string;
     barangay: string;
+    committee?: string;
+    id?: string;
   };
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isMobile } = useSidebar();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenBarangay, setIsOpenBarangay] = useState(false);
+
+  // Extract the route prefix from the current pathname
+  // Examples: /lydo/dashboard -> /lydo, /sk-federation/budget-report -> /sk-federation
+  const getAccountSettingsRoute = () => {
+    // Match routes that start with known prefixes
+    const routePrefixes = ["/lydo", "/sk-federation", "/sk-official", "/admin"];
+    const matchedPrefix = routePrefixes.find((prefix) =>
+      pathname.startsWith(prefix)
+    );
+
+    // Default to /lydo if no match found (fallback)
+    return matchedPrefix ? `${matchedPrefix}/my-account` : "/lydo/my-account";
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -154,6 +172,89 @@ export function NavUser({
         </form>
       </Modal>
 
+       {/* Upload Barangay Banner Modal */}
+      <Modal
+        isOpen={isOpenBarangay}
+        onClose={() => setIsOpenBarangay(false)}
+        title="Upload Barangay Officials Banner"
+      >
+        <form
+          action={async (formData) => {
+            formData.append("barangay", user.barangay);
+            if (user.id) {
+              formData.append("userId", user.id);
+            }
+            const result = await uploadBarangayBannerAction(formData);
+            if (result.success) {
+              toast.success(result.message);
+              setIsOpenBarangay(false);
+              router.refresh();
+            } else {
+              toast.error(result.message);
+            }
+          }}
+          className="space-y-4"
+        >
+          <p className="text-sm text-muted-foreground space-y-1">
+            <span>
+              You can upload your barangay's official{" "}
+              <strong>officials banner</strong> image.
+            </span>
+            <br />
+            <span className="block mt-1 text-xs text-amber-600">
+              ⚠️ Please upload high-quality images. Low-resolution files may
+              appear <strong>stretched, cropped, or pixelated</strong> when displayed.
+            </span>
+            <br />
+            <span className="block mt-1 text-xs text-muted-foreground">
+              📏 Recommended specifications:
+              <ul className="list-disc list-inside">
+                <li>
+                  Resolution: <strong>1920 × 600 px</strong> or higher
+                </li>
+                <li>
+                  Aspect ratio: <strong>16:5</strong> (recommended)
+                </li>
+                <li>
+                  File format: <strong>PNG</strong> or <strong>JPG</strong>
+                </li>
+                <li>
+                  Max file size: <strong>5MB</strong>
+                </li>
+              </ul>
+            </span>
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Banner Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              name="banner"
+              className="w-full text-sm border p-2 rounded-md"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Select a banner image to upload
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => setIsOpenBarangay(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">
+              <IconUpload className="size-4 mr-2" />
+              Upload Banner
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
@@ -162,16 +263,16 @@ export function NavUser({
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
-                <Avatar className="h-8 w-8 rounded-lg grayscale">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
+                <Avatar className="h-8 w-8 rounded-full">
+                  <AvatarImage className='object-cover' src={user.avatar} alt={user.name} />
+                  <AvatarFallback className="rounded-full">
                     {user.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user.position}
+                    {user.position} {user.committee && `(${user.committee})`}
                   </span>
                 </div>
                 <IconDotsVertical className="ml-auto size-4" />
@@ -185,16 +286,16 @@ export function NavUser({
             >
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="rounded-lg">
+                  <Avatar className="h-8 w-8 rounded-full">
+                    <AvatarImage className='object-cover' src={user.avatar} alt={user.name} />
+                    <AvatarFallback className="rounded-full">
                       {user.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
                     <span className="text-muted-foreground truncate text-xs">
-                      {user.position}
+                      {user.position} {user.committee && `(${user.committee})`}
                     </span>
                   </div>
                 </div>
@@ -210,6 +311,22 @@ export function NavUser({
                     Upload Header & Footer
                   </DropdownMenuItem>
                 )}
+                {user.position === "CHAIRPERSON" && (
+                  <DropdownMenuItem
+                    className="flex items-center gap-2"
+                    onClick={() => setIsOpenBarangay(true)}
+                  >
+                    <IconUpload className="size-4" />
+                    Upload Barangay Banner
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => router.push(getAccountSettingsRoute())}
+                  className="flex items-center gap-2"
+                >
+                  <IconSettings className="size-4" />
+                  Account Settings
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleLogout}
                   disabled={isLoggingOut}

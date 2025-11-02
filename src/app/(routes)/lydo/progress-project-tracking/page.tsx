@@ -69,7 +69,7 @@ const Page = () => {
   // 📊 Group projects by committee
   const grouped = projects.reduce(
     (acc: Record<string, ProjectProposal[]>, proj) => {
-      const committee = proj.user.committee || "Unassigned";
+      const committee = proj.user.committee || "Unrequired";
       if (!acc[committee]) acc[committee] = [];
       acc[committee].push(proj);
       return acc;

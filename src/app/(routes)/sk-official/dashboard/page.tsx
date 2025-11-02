@@ -1,9 +1,7 @@
 import React from "react";
 import StatisticsCard from "@/components/globals/statistics-card";
 import db from "@/lib/db";
-import {
-  calculateMetrics,
-} from "@/lib/utils";
+import { calculateMetrics } from "@/lib/utils";
 import { ReusableChartAreaInteractive } from "@/components/globals/area-chart";
 import { ChartDataPoint, ProposalData } from "@/types/types";
 import EventCalendar from "../_components/event-calendar";
@@ -11,6 +9,7 @@ import { OfficialsTable } from "../_components/officials-table";
 import { BudgetPieChart } from "../_components/budget-pie-chart";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 
 const Page = async () => {
   const user = await getServerSession();
@@ -136,7 +135,7 @@ const Page = async () => {
       id: official.id,
       name: displayName,
       position: official.officialType || "Unknown",
-      committee: official.committee || "All committees",
+      committee: official.committee || "Unrequired",
     };
   });
 
@@ -153,8 +152,29 @@ const Page = async () => {
     },
   });
 
+  const barangayBanner = await db.assets.findFirst({
+    where: {
+      barangay: user.barangay as string,
+    },
+  });
+
   return (
     <div className="p-5">
+      <div className="grid lg:grid-cols-5 grid-cols-1 gap-5 mb-5">
+        {barangayBanner?.barangayBanner && (
+          <div className="relative lg:col-span-3 w-full aspect-video rounded-md h-[450px]">
+            <Image
+              src={barangayBanner?.barangayBanner}
+              alt="Barangay banner"
+              fill
+              className="object-contain rounded-md"
+            />
+          </div>
+        )}
+        <div className={barangayBanner?.barangayBanner ? "lg:col-span-2" : "lg:col-span-5"}>
+          <OfficialsTable data={formattedOfficials} />
+        </div>
+      </div>
       <div className="grid lg:grid-cols-4 grid-cols-1 gap-5">
         <StatisticsCard title="Project Reports" {...projectReportsMetrics} />
         <StatisticsCard title="Budget Reports" {...budgetReportsMetrics} />
@@ -174,7 +194,6 @@ const Page = async () => {
           <EventCalendar events={events} />
         </div>
         <div className="lg:col-span-3 space-y-5">
-          <OfficialsTable data={formattedOfficials} />
           <BudgetPieChart budgetDistribution={budgetDistribution} />
         </div>
       </div>

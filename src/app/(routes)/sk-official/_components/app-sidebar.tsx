@@ -13,6 +13,7 @@ import {
   IconWallet,
   IconLogs,
   IconTrack,
+  IconFolder,
 } from "@tabler/icons-react";
 
 import {
@@ -53,6 +54,11 @@ const data = {
       title: "Budget Distribution",
       url: "/sk-official/budget-distribution",
       icon: IconDeviceTabletPlus,
+    },
+    {
+      title: "ABYIP",
+      url: "/sk-official/abyip",
+      icon: IconFolder,
     },
     {
       title: "CBYDP",

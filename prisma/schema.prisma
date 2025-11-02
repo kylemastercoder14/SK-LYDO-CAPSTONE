@@ -9,9 +9,10 @@ datasource db {
 }
 
 model Assets {
-  id     String @id @default(uuid())
+  id     String  @id @default(uuid())
   header String?
   footer String?
+  barangayBanner String?
 
   barangay String @unique
 
@@ -41,6 +42,7 @@ model User {
   budgetDistribution BudgetDistribution[]
   budgetReports      BudgetReports[]
   cbydp              CBYDP[]
+  abyip              ABYIP[]
   meetingAgenda      MeetingAgenda[]
   meetingMinutes     MeetingMinutes[]
   officials          Officials[]
@@ -91,6 +93,20 @@ model BudgetReports {
 }
 
 model CBYDP {
+  id         String    @id @default(uuid())
+  name       String
+  fileSize   String
+  fileType   String
+  fileUrl    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+  uploadedBy String
+  user       User      @relation(fields: [uploadedBy], references: [id])
+}
+
+model ABYIP {
   id         String    @id @default(uuid())
   name       String
   fileSize   String
@@ -163,6 +179,8 @@ model ProjectProposal {
   reasonForRejection String?
   createdBy          String
   participantsCount  String?
+  isThereCollaboration Boolean  @default(false)
+  committee          String?
 
   attachments String[]
   user        User     @relation(fields: [createdBy], references: [id])

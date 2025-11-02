@@ -70,7 +70,7 @@ const TechAssistant = () => {
           <div className="relative z-10 h-full flex flex-col justify-center items-center text-white p-4 sm:p-6 lg:p-8">
             <div className="text-center opacity-100 group-hover:opacity-0 transition-opacity duration-300">
               <div className="text-3xl sm:text-4xl font-bold tracking-widest mb-2 text-shadow-lg">
-                LYDO
+                CYDO
               </div>
               <div className="text-xl sm:text-2xl font-semibold tracking-widest text-shadow-lg">
                 OFFICIALS

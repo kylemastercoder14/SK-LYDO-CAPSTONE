@@ -29,6 +29,14 @@ import { RichTextEditor } from "@/components/globals/rich-text-editor";
 import { Switch } from "@/components/ui/switch";
 import { convertHtmlToDocx } from "@/lib/utils";
 import { uploadToSupabase } from "@/lib/upload";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { COMMITTEE } from "@/lib/constants";
 
 interface ProjectProposalFormProps {
   initialData: ProjectProposal | null;
@@ -46,12 +54,22 @@ const ProjectProposalForm: React.FC<ProjectProposalFormProps> = ({
 
   const form = useForm<ProjectProposalFormValues>({
     resolver: zodResolver(projectProposalSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      title: initialData.title,
+      isManualTyping: initialData.fileUrl ? false : true,
+      content: initialData.description || "",
+      budget: initialData.budget,
+      fileUrl: initialData.fileUrl || "",
+      isThereCollaboration: (initialData as any).isThereCollaboration || false,
+      committee: (initialData as any).committee || "",
+    } : {
       title: "",
       isManualTyping: true,
       content: "",
       budget: 0,
       fileUrl: "",
+      isThereCollaboration: false,
+      committee: "",
     },
   });
 
@@ -186,6 +204,63 @@ const ProjectProposalForm: React.FC<ProjectProposalFormProps> = ({
                 </FormItem>
               )}
             />
+            {/* Collaboration Switch */}
+            <FormField
+              control={form.control}
+              name="isThereCollaboration"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-1">
+                    <FormLabel>There is Collaboration</FormLabel>
+                    <FormDescription>
+                      Enable this option if this project proposal has collaboration with other committees.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            {/* Committee Select - Only shown when collaboration is enabled */}
+            {form.watch("isThereCollaboration") && (
+              <FormField
+                control={form.control}
+                name="committee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Committee <span className="text-red-600">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={loading}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a committee" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COMMITTEE.map((committee) => (
+                          <SelectItem key={committee} value={committee}>
+                            {committee}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Select the committee that collaborated with this project.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             {/* File URL Field */}
             {!form.watch("isManualTyping") && (
               <FormField

@@ -2,6 +2,7 @@ import z from "zod";
 import {
   budgetReportSchema,
   cbydpReportSchema,
+  abyipReportSchema,
   meetingAgendaSchema,
   meetingMinutesSchema,
   projectProposalSchema,
@@ -15,6 +16,7 @@ export type ProjectReportFormValues = z.infer<typeof projectReportSchema>;
 export type BudgetReportFormValues = z.infer<typeof budgetReportSchema>;
 export type ProjectProposalFormValues = z.infer<typeof projectProposalSchema>;
 export type CBYDPReportFormValues = z.infer<typeof cbydpReportSchema>;
+export type ABYIPReportFormValues = z.infer<typeof abyipReportSchema>;
 export type MeetingAgendaFormValues = z.infer<typeof meetingAgendaSchema>;
 export type MinutesMeetingFormValues = z.infer<typeof meetingMinutesSchema>;
 export type ResolutionFormValues = z.infer<typeof resolutionSchema>;

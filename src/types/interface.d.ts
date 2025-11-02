@@ -9,6 +9,7 @@ import {
   User,
   Ticket,
   Resolution,
+  ABYIP,
 } from "@prisma/client";
 
 export interface SystemLogsProps extends SystemLogs {
@@ -20,6 +21,10 @@ export interface ProjectReportsProps extends ProjectReports {
 }
 
 export interface BudgetReportsProps extends BudgetReports {
+  user: User | null;
+}
+
+export interface ABYIPProps extends ABYIP {
   user: User | null;
 }
 

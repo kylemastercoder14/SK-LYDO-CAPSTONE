@@ -15,8 +15,7 @@ const Header = () => {
   const navLinks = [
     { href: "#mission-vision", label: "Mission & Vision" },
     { href: "#committee", label: "Committee" },
-    { href: "#officials", label: "Officials" },
-    { href: "#contact-us", label: "Contact Us" },
+    { href: "#officials", label: "Officials" }
   ];
 
   return (
