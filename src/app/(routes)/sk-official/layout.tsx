@@ -39,7 +39,6 @@ const SkOfficialLayout = async ({
       />
       <SidebarInset>
         <ActiveStatus userId={user.id} />
-
         <SiteHeader user={{ ...user, role: user.role as UserRole }} />
         <main className="relative">
           {children}

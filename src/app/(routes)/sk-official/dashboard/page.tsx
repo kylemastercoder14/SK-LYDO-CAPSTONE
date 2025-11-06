@@ -135,7 +135,7 @@ const Page = async () => {
       id: official.id,
       name: displayName,
       position: official.officialType || "Unknown",
-      committee: official.committee || "Unrequired",
+      committee: official.committee,
     };
   });
 
@@ -162,7 +162,7 @@ const Page = async () => {
     <div className="p-5">
       <div className="grid lg:grid-cols-5 grid-cols-1 gap-5 mb-5">
         {barangayBanner?.barangayBanner && (
-          <div className="relative lg:col-span-3 w-full aspect-video rounded-md h-[450px]">
+          <div className="relative lg:col-span-2 w-full aspect-video rounded-md h-[450px]">
             <Image
               src={barangayBanner?.barangayBanner}
               alt="Barangay banner"
@@ -171,8 +171,8 @@ const Page = async () => {
             />
           </div>
         )}
-        <div className={barangayBanner?.barangayBanner ? "lg:col-span-2" : "lg:col-span-5"}>
-          <OfficialsTable data={formattedOfficials} />
+        <div className={barangayBanner?.barangayBanner ? "lg:col-span-3" : "lg:col-span-5"}>
+          <OfficialsTable data={formattedOfficials} userRole={user.officialType || ""} />
         </div>
       </div>
       <div className="grid lg:grid-cols-4 grid-cols-1 gap-5">

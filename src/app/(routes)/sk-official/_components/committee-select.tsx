@@ -24,6 +24,7 @@ export function CommitteeSelect({ userId }: { userId: string }) {
     if (res?.success) {
       toast.success("Committee assigned successfully!");
       router.refresh();
+      window.location.reload()
     }
   };
 

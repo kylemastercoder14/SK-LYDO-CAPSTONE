@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { CBYDPReportFormValues } from "@/types/types";
 import { createCBYDPReport, updateCBYDPReport } from "@/actions";
+import { formatFileType } from '@/lib/utils';
 
 interface CBYDPReportFormProps {
   initialData: CBYDP | null;
@@ -58,7 +59,7 @@ const CBYDPReportForm: React.FC<CBYDPReportFormProps> = ({
         toast.success("CBYDP report updated successfully! 🎉");
       } else {
         await createCBYDPReport(data, userId);
-        toast.success("CBYDP report created successfully! ✨");
+        toast.success("CBYDP report uploaded successfully! ✨");
       }
       router.refresh();
       onClose?.();
@@ -70,8 +71,8 @@ const CBYDPReportForm: React.FC<CBYDPReportFormProps> = ({
     }
   };
 
-  const title = initialData ? "Edit CBYDP Report" : "Create CBYDP Report";
-  const action = initialData ? "Save changes" : "Create report";
+  const title = initialData ? "Edit CBYDP Report" : "Upload CBYDP Report";
+  const action = initialData ? "Save changes" : "Upload report";
 
   return (
     <>
@@ -110,11 +111,7 @@ const CBYDPReportForm: React.FC<CBYDPReportFormProps> = ({
                 <FormItem>
                   <FormLabel>File Size</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="e.g., 2.5 MB"
-                      {...field}
-                    />
+                    <Input disabled placeholder="e.g., 2.5 MB" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,11 +125,7 @@ const CBYDPReportForm: React.FC<CBYDPReportFormProps> = ({
                 <FormItem>
                   <FormLabel>File Type</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="e.g., PDF"
-                      {...field}
-                    />
+                    <Input disabled placeholder="e.g., PDF" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +140,14 @@ const CBYDPReportForm: React.FC<CBYDPReportFormProps> = ({
                   <FormLabel>File URL</FormLabel>
                   <FormControl>
                     <SingleFileUpload
-                      onFileUpload={field.onChange}
+                      onFileUpload={({ url, size, type }) => {
+                        form.setValue("fileUrl", url);
+                        form.setValue(
+                          "fileSize",
+                          `${(size / 1024 / 1024).toFixed(2)} MB`
+                        );
+                        form.setValue("fileType", formatFileType(type));
+                      }}
                       defaultValue={field.value}
                       bucket="assets"
                       maxFileSizeMB={5}

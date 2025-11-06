@@ -1,27 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import Heading from "@/components/globals/heading";
-import { DataTable } from "./_components/data-table";
 import db from "@/lib/db";
-import { columns } from "./_components/columns";
-import ABYIPReportModal from "./_components/abyip-report-modal";
 import { getServerSession } from "@/lib/session";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FolderView from "./_components/folder-view";
+import ABYIPReportModal from "./_components/abyip-report-modal";
 
 const Page = async () => {
   const user = await getServerSession();
-  const data = await db.aBYIP.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
+  const reports = await db.aBYIP.findMany({
+    orderBy: { createdAt: "desc" },
     where: {
-      user: {
-        barangay: user?.barangay,
-      },
+      user: { barangay: user?.barangay },
     },
-    include: {
-      user: true,
-    },
+    include: { user: true },
   });
+
+  // Group by year
+  const grouped = reports.reduce((acc: any, item) => {
+    const year = new Date(item.createdAt).getFullYear();
+    acc[year] = acc[year] || [];
+    acc[year].push(item);
+    return acc;
+  }, {});
 
   return (
     <div className="p-5">
@@ -30,27 +31,13 @@ const Page = async () => {
           title="ABYIP Report"
           description="View and manage ABYIP reports for your barangay."
         />
-        <ABYIPReportModal userId={user?.id ?? ""} />
+        {user?.officialType === "TREASURER" && (
+          <ABYIPReportModal userId={user?.id ?? ""} />
+        )}
       </div>
+
       <div className="mt-5">
-        <Tabs defaultValue="active">
-          <TabsList>
-            <TabsTrigger value="active">Active ABYIP Report</TabsTrigger>
-            <TabsTrigger value="inactive">Inactive ABYIP Report</TabsTrigger>
-          </TabsList>
-          <TabsContent value="active">
-            <DataTable
-              columns={columns}
-              data={data.filter((report) => !report.isArchived)}
-            />
-          </TabsContent>
-          <TabsContent value="inactive">
-            <DataTable
-              columns={columns}
-              data={data.filter((report) => report.isArchived)}
-            />
-          </TabsContent>
-        </Tabs>
+        <FolderView grouped={grouped} />
       </div>
     </div>
   );

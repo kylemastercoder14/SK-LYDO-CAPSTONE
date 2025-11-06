@@ -305,7 +305,7 @@ const Page = async ({
       </div>
       {barangayBanner?.barangayBanner && (
         <div className="grid lg:grid-cols-5 grid-cols-1 gap-5 mt-5">
-          <div className="relative lg:col-span-3 w-full aspect-video rounded-md h-[450px]">
+          <div className="relative lg:col-span-2 w-full aspect-video rounded-md h-[450px]">
             <Image
               src={barangayBanner?.barangayBanner}
               alt="Barangay banner"
@@ -313,7 +313,7 @@ const Page = async ({
               className="object-contain rounded-md"
             />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <OfficialsTable data={formattedOfficials ?? []} />
           </div>
         </div>

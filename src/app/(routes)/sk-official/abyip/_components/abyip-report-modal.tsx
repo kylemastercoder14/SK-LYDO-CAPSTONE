@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
+import { UploadIcon } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import ABYIPReportForm from "@/components/forms/abyip-report-form";
 
@@ -18,13 +18,11 @@ const ABYIPReportModal = ({ userId }: { userId: string }) => {
         />
       </Modal>
       <Button onClick={() => setIsOpen(true)} variant="primary">
-        <PlusIcon className="size-4" />
-        Create Report
+        <UploadIcon className="size-4" />
+        Upload Report
       </Button>
     </>
   );
 };
 
 export default ABYIPReportModal;
-
-

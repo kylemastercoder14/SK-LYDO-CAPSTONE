@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { ABYIPReportFormValues } from "@/types/types";
 import { createABYIPReport, updateABYIPReport } from "@/actions";
+import { formatFileType } from '@/lib/utils';
 
 interface ABYIPReportFormProps {
   initialData: ABYIP | null;
@@ -58,7 +59,7 @@ const ABYIPReportForm: React.FC<ABYIPReportFormProps> = ({
         toast.success("ABYIP report updated successfully! 🎉");
       } else {
         await createABYIPReport(data, userId);
-        toast.success("ABYIP report created successfully! ✨");
+        toast.success("ABYIP report uploaded successfully! ✨");
       }
       router.refresh();
       onClose?.();
@@ -70,8 +71,8 @@ const ABYIPReportForm: React.FC<ABYIPReportFormProps> = ({
     }
   };
 
-  const title = initialData ? "Edit ABYIP Report" : "Create ABYIP Report";
-  const action = initialData ? "Save changes" : "Create report";
+  const title = initialData ? "Edit ABYIP Report" : "Upload ABYIP Report";
+  const action = initialData ? "Save changes" : "Upload report";
 
   return (
     <>
@@ -111,7 +112,7 @@ const ABYIPReportForm: React.FC<ABYIPReportFormProps> = ({
                   <FormLabel>File Size</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled
                       placeholder="e.g., 2.5 MB"
                       {...field}
                     />
@@ -129,7 +130,7 @@ const ABYIPReportForm: React.FC<ABYIPReportFormProps> = ({
                   <FormLabel>File Type</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled
                       placeholder="e.g., PDF"
                       {...field}
                     />
@@ -147,7 +148,14 @@ const ABYIPReportForm: React.FC<ABYIPReportFormProps> = ({
                   <FormLabel>File URL</FormLabel>
                   <FormControl>
                     <SingleFileUpload
-                      onFileUpload={field.onChange}
+                      onFileUpload={({ url, size, type }) => {
+                        form.setValue("fileUrl", url);
+                        form.setValue(
+                          "fileSize",
+                          `${(size / 1024 / 1024).toFixed(2)} MB`
+                        );
+                        form.setValue("fileType", formatFileType(type));
+                      }}
                       defaultValue={field.value}
                       bucket="assets"
                       maxFileSizeMB={5}
@@ -178,4 +186,3 @@ const ABYIPReportForm: React.FC<ABYIPReportFormProps> = ({
 };
 
 export default ABYIPReportForm;
-

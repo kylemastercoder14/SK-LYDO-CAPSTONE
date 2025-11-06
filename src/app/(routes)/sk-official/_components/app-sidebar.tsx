@@ -120,6 +120,16 @@ const data = {
       icon: IconFileCheck,
     },
     {
+      title: "ABYIP",
+      url: "/sk-official/abyip",
+      icon: IconFolder,
+    },
+    {
+      title: "CBYDP",
+      url: "/sk-official/cbydp",
+      icon: IconUsersGroup,
+    },
+    {
       title: "Budget Distribution",
       url: "/sk-official/budget-distribution",
       icon: IconDeviceTabletPlus,
@@ -140,6 +150,16 @@ const data = {
       title: "Minutes of Meeting",
       url: "/sk-official/minutes-of-meeting",
       icon: IconClock,
+    },
+    {
+      title: "ABYIP",
+      url: "/sk-official/abyip",
+      icon: IconFolder,
+    },
+    {
+      title: "CBYDP",
+      url: "/sk-official/cbydp",
+      icon: IconUsersGroup,
     },
     {
       title: "Resolution",
