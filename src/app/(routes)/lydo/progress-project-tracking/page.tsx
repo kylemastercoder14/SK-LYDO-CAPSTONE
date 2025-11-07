@@ -4,14 +4,17 @@ import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import FilterBarangay from "../_components/filter-barangay";
-import { Loader2 } from "lucide-react";
-import { useSearchParams } from 'next/navigation';
+import { Loader2, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 
 interface ProjectProposal {
   id: string;
   title: string;
   status: string;
   createdBy: string;
+  isThereCollaboration?: boolean;
+  committee?: string;
   user: {
     committee: string;
   };
@@ -86,14 +89,20 @@ const Page = () => {
 
       {Object.entries(grouped).map(([committee, items]) => {
         const total = items.length;
-        const accomplished = items.filter(
-          (p) => p.status === "Accomplished" || p.status === "Completed"
-        ).length;
+        const accomplishedProjects = items.filter(
+          (p) => p.status === "Accomplished"
+        );
+        const accomplished = accomplishedProjects.length;
         const pending = items.filter((p) => p.status === "Pending").length;
         const inProgress = items.filter(
           (p) => p.status === "In Progress"
         ).length;
         const progressPercent = total > 0 ? (accomplished / total) * 100 : 0;
+
+        // Filter accomplished projects with collaboration
+        const collaboratedProjects = accomplishedProjects.filter(
+          (p) => p.isThereCollaboration && p.committee
+        );
 
         return (
           <Card key={committee} className="shadow-md">
@@ -106,10 +115,42 @@ const Page = () => {
                   <strong>{accomplished}</strong> accomplished out of{" "}
                   <strong>{total}</strong> projects
                 </div>
+                {collaboratedProjects.length > 0 && (
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-md border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="size-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        Collaborative Projects ({collaboratedProjects.length})
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {collaboratedProjects.map((project) => (
+                        <Badge
+                          key={project.id}
+                          variant="outline"
+                          className="text-xs bg-white dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/60"
+                        >
+                          <Users className="size-3 mr-1" />
+                          {project.title}
+                          {project.committee && (
+                            <span className="ml-1 font-semibold">
+                              • {project.committee}
+                            </span>
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <Progress value={progressPercent} className="h-3" />
                 <div className="text-xs text-gray-500 mt-2">
                   Pending: {pending} | In Progress: {inProgress} | Accomplished:{" "}
                   {accomplished}
+                  {collaboratedProjects.length > 0 && (
+                    <span className="ml-2 text-blue-600">
+                      • {collaboratedProjects.length} with collaboration
+                    </span>
+                  )}
                 </div>
               </div>
             </CardContent>

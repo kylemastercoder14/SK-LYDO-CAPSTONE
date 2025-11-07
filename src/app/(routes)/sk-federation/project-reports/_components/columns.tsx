@@ -37,7 +37,7 @@ export const columns: ColumnDef<ProjectReportsProps>[] = [
             title={user.user?.id}
             className="text-xs cursor-pointer text-primary gap-2 flex items-center"
           >
-            <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
+            <span className="w-[200px] text-muted-foreground hover:underline truncate overflow-hidden whitespace-nowrap">
               {user.user?.id}
             </span>
             {copied ? (
@@ -161,6 +161,7 @@ export const columns: ColumnDef<ProjectReportsProps>[] = [
             <AvatarImage
               src={user.user?.image || ""}
               alt={user.user?.username || ""}
+              className='object-cover'
             />
             <AvatarFallback className="rounded-lg">
               {(user.user?.username || "U").charAt(0)}

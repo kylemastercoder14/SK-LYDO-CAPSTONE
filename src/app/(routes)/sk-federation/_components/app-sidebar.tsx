@@ -44,7 +44,7 @@ const data = {
     },
     {
       title: "Progress Project Tracking",
-      url: "/lydo/progress-project-tracking",
+      url: "/sk-federation/progress-project-tracking",
       icon: IconTrack,
     },
   ],

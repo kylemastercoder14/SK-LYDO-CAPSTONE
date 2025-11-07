@@ -27,14 +27,23 @@ export const columns: ColumnDef<TicketWithUser>[] = [
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const [copied, setCopied] = useState(false);
 
-      const user = ticket.user ?? { username: "", image: "", firstName: "", lastName: "" };
+      const user = ticket.user ?? {
+        username: "",
+        image: "",
+        firstName: "",
+        lastName: "",
+      };
       const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
       const displayName = fullName || user.username || "Unknown User";
 
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-2.5">
           <Avatar className="rounded-lg">
-            <AvatarImage src={user.image || ""} alt={user.username || ""} />
+            <AvatarImage
+              src={user.image || ""}
+              className="object-cover"
+              alt={user.username || ""}
+            />
             <AvatarFallback className="rounded-lg">
               {(user.username || "U").charAt(0)}
             </AvatarFallback>
@@ -45,7 +54,7 @@ export const columns: ColumnDef<TicketWithUser>[] = [
               title={row.original.id}
               className="text-xs cursor-pointer text-primary gap-2 flex items-center"
             >
-              <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
+              <span className="w-[200px] text-muted-foreground hover:underline truncate overflow-hidden whitespace-nowrap">
                 Ticket #: {row.original.id}
               </span>
               {copied ? (
@@ -87,6 +96,32 @@ export const columns: ColumnDef<TicketWithUser>[] = [
         <ChevronsUpDown className="h-4 w-4" />
       </Button>
     ),
+    cell: ({ row }) => {
+      return (
+        <span className="text-sm ml-2.5">
+          {row.original.title}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "details",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Details
+        <ChevronsUpDown className="h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      return (
+        <span className="text-sm ml-2.5">
+          {row.original.description}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "status",
@@ -112,7 +147,7 @@ export const columns: ColumnDef<TicketWithUser>[] = [
       const color = statusColors[status] || "bg-gray-100 text-gray-800";
 
       return (
-        <Badge className={`${color} rounded-full text-xs px-3 py-1`}>
+        <Badge className={`${color} rounded-full ml-2.5 text-xs px-3 py-1`}>
           {status}
         </Badge>
       );
@@ -141,7 +176,7 @@ export const columns: ColumnDef<TicketWithUser>[] = [
       const color = priorityColors[priority] || "bg-gray-100 text-gray-800";
 
       return (
-        <Badge className={`${color} rounded-full text-xs px-3 py-1`}>
+        <Badge className={`${color} rounded-full ml-2.5 text-xs px-3 py-1`}>
           {priority}
         </Badge>
       );
@@ -161,7 +196,7 @@ export const columns: ColumnDef<TicketWithUser>[] = [
     cell: ({ row }) => {
       const date = new Date(row.original.createdAt);
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm ml-2.5">
           {date.toLocaleDateString()} {date.toLocaleTimeString()}
         </span>
       );

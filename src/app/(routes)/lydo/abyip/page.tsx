@@ -1,47 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import Heading from "@/components/globals/heading";
-import { DataTable } from "./_components/data-table";
 import db from "@/lib/db";
-import { columns } from "./_components/columns";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FolderView from "./_components/folder-view";
 
 const Page = async () => {
-  const data = await db.aBYIP.findMany({
-    orderBy: {
-      createdAt: "desc",
+  const reports = await db.aBYIP.findMany({
+    orderBy: { createdAt: "desc" },
+    where: {
+      isArchived: false
     },
-    include: {
-      user: true,
-    },
+    include: { user: true },
   });
+
+  // Group by year
+  const grouped = reports.reduce((acc: any, item) => {
+    const year = new Date(item.createdAt).getFullYear();
+    acc[year] = acc[year] || [];
+    acc[year].push(item);
+    return acc;
+  }, {});
 
   return (
     <div className="p-5">
       <div className="flex items-center justify-between">
         <Heading
-          title="ABYIP Reports"
+          title="ABYIP Report"
           description="View and manage ABYIP reports for your system."
         />
       </div>
+
       <div className="mt-5">
-        <Tabs defaultValue="active">
-          <TabsList>
-            <TabsTrigger value="active">Active ABYIP Report</TabsTrigger>
-            <TabsTrigger value="inactive">Inactive ABYIP Report</TabsTrigger>
-          </TabsList>
-          <TabsContent value="active">
-           <DataTable
-              columns={columns}
-              data={data.filter((report) => !report.isArchived)}
-            />
-          </TabsContent>
-          <TabsContent value="inactive">
-            <DataTable
-              columns={columns}
-              data={data.filter((report) => report.isArchived)}
-            />
-          </TabsContent>
-        </Tabs>
+        <FolderView grouped={grouped} />
       </div>
     </div>
   );

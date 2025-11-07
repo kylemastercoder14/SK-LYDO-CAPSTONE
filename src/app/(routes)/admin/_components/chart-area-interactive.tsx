@@ -30,7 +30,7 @@ import type { ProjectProposal } from "@prisma/client";
 const chartConfig = {
   participants: {
     label: "SK Participants",
-    color: "hsl(var(--chart-2))",
+    color: "oklch(62.3% 0.214 259.815)",
   },
 } satisfies Record<string, { label: string; color: string }>;
 

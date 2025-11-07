@@ -3,20 +3,46 @@ import db from "@/lib/db";
 import Heading from "@/components/globals/heading";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import FileCard from './_components/file-card';
+import FileList from "./_components/file-list";
 
 const AnnualReportPage = async (props: {
-  params: Promise<{
-    year: string;
-  }>;
+  params: Promise<{ year: string }>;
 }) => {
   const params = await props.params;
 
-  // Define date range
   const start = new Date(`${params.year}-01-01`);
   const end = new Date(`${params.year}-12-31`);
 
-  // Fetch all reports
+  const queries = [
+    db.budgetReports.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      include: { user: true },
+    }),
+    db.cBYDP.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      include: { user: true },
+    }),
+    db.meetingMinutes.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      include: { user: true },
+    }),
+    db.meetingMinutes.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      include: { user: true },
+    }),
+    db.projectReports.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      include: { user: true },
+    }),
+    db.projectProposal.findMany({
+      where: {
+        createdAt: { gte: start, lte: end },
+        status: { in: ["In Progress", "Completed"] },
+      },
+      include: { user: true },
+    }),
+  ];
+
   const [
     budgetReports,
     cbydp,
@@ -24,29 +50,8 @@ const AnnualReportPage = async (props: {
     otherMinutes,
     projectReports,
     projectProposals,
-  ] = await Promise.all([
-    db.budgetReports.findMany({
-      where: { createdAt: { gte: start, lte: end } },
-    }),
-    db.cBYDP.findMany({ where: { createdAt: { gte: start, lte: end } } }),
-    db.meetingMinutes.findMany({
-      where: { createdAt: { gte: start, lte: end } },
-    }),
-    db.meetingMinutes.findMany({
-      where: { createdAt: { gte: start, lte: end } },
-    }),
-    db.projectReports.findMany({
-      where: { createdAt: { gte: start, lte: end } },
-    }),
-    db.projectProposal.findMany({
-      where: {
-        createdAt: { gte: start, lte: end },
-        status: { in: ["In Progress", "Completed"] },
-      },
-    }),
-  ]);
+  ] = await Promise.all(queries);
 
-  // Merge into one array with a type label
   const reports = [
     ...budgetReports.map((r) => ({ ...r, source: "budgetReports" })),
     ...cbydp.map((r) => ({ ...r, source: "cBYDP" })),
@@ -54,7 +59,10 @@ const AnnualReportPage = async (props: {
     ...otherMinutes.map((r) => ({ ...r, source: "otherMinutes" })),
     ...projectReports.map((r) => ({ ...r, source: "projectReports" })),
     ...projectProposals.map((r) => ({ ...r, source: "projectProposals" })),
-  ];
+  ].map((r) => ({
+    ...r,
+    barangay: r.user?.barangay ?? "Unknown",
+  }));
 
   return (
     <div className="p-5">
@@ -62,12 +70,9 @@ const AnnualReportPage = async (props: {
         title={`Annual Report for ${params.year}`}
         description={`Annual Report for ${params.year} for all barangay registered.`}
       />
+
       <div className="mt-5">
-        <div className="grid lg:grid-cols-6 grid-cols-1 gap-5">
-          {reports.map((report) => (
-            <FileCard key={`${report.source}-${report.id}`} report={report} />
-          ))}
-        </div>
+        <FileList reports={reports} />
       </div>
     </div>
   );

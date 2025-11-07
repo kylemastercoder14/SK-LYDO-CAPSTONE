@@ -12,37 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { formattedBudget, normalizeBarangay } from "@/lib/utils";
 import { BARANGAYS } from "@/lib/constants";
 
-const ExpandableDescription = ({ description }: { description: string }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const maxLength = 50;
-
-  if (description.length <= maxLength) {
-    return (
-      <div
-        className="ml-2.5"
-        dangerouslySetInnerHTML={{ __html: description }}
-      />
-    );
-  }
-
-  const shortenedDescription = description.substring(0, maxLength) + "...";
-
-  return (
-    <div className="ml-2.5 max-w-sm whitespace-normal break-words">
-      <div dangerouslySetInnerHTML={{__html: isExpanded ? description : shortenedDescription}}/>
-
-      <Button
-        variant="link"
-        size="sm"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="p-0 h-auto ml-1 text-blue-600 hover:no-underline"
-      >
-        {isExpanded ? "View less" : "View more"}
-      </Button>
-    </div>
-  );
-};
-
 export const columns: ColumnDef<ProjectProposalProps>[] = [
   {
     accessorKey: "projectName",
@@ -69,7 +38,7 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
             title={user.user?.id}
             className="text-xs cursor-pointer text-primary gap-2 flex items-center"
           >
-            <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
+            <span className="w-[200px] text-muted-foreground hover:underline truncate overflow-hidden whitespace-nowrap">
               {user.user?.id}
             </span>
             {copied ? (
@@ -136,24 +105,6 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
     cell: ({ row }) => {
       const budget = formattedBudget(row.original.budget);
       return <span className="ml-2.5">₱{budget}</span>;
-    },
-  },
-  {
-    accessorKey: "description",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Description
-          <ChevronsUpDown className="h-4 w-4 ml-1" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const description = row.original.description;
-      return <ExpandableDescription description={description} />;
     },
   },
   {
@@ -250,6 +201,7 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
             <AvatarImage
               src={user.user?.image || ""}
               alt={user.user?.username || ""}
+              className='object-cover'
             />
             <AvatarFallback className="rounded-lg">
               {(user.user?.username || "U").charAt(0)}

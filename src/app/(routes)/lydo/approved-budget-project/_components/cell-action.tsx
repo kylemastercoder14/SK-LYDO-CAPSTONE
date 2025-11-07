@@ -97,8 +97,8 @@ const CellAction = ({ data }: { data: ProjectProposalProps }) => {
             <FileTextIcon className="size-4" />
             View file
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {data.isArchived ? (
+          {/* <DropdownMenuSeparator /> */}
+          {/* {data.isArchived ? (
             <DropdownMenuItem onClick={() => setOpenRetrieve(true)}>
               <RefreshCcw className="size-4" />
               Retrieve
@@ -108,7 +108,7 @@ const CellAction = ({ data }: { data: ProjectProposalProps }) => {
               <ArchiveIcon className="size-4" />
               Archive
             </DropdownMenuItem>
-          )}
+          )} */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

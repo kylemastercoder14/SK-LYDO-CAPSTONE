@@ -28,25 +28,25 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
     },
     cell: ({ row }) => {
       const event = row.original.title;
-      const user = row.original;
+      const project = row.original;
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const [copied, setCopied] = useState(false); // Keep useState here for the copy functionality
       return (
         <div className="ml-2.5">
           <span>{event}</span>
           <div
-            title={user.user?.id}
+            title={project.id}
             className="text-xs cursor-pointer text-primary gap-2 flex items-center"
           >
-            <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
-              {user.user?.id}
+            <span className="w-[200px] text-muted-foreground hover:underline truncate overflow-hidden whitespace-nowrap">
+              {project.id}
             </span>
             {copied ? (
               <CheckIcon className="size-3 text-green-600" />
             ) : (
               <CopyIcon
                 onClick={() => {
-                  navigator.clipboard.writeText(user.user?.id || "");
+                  navigator.clipboard.writeText(project.id || "");
                   toast.success("Project ID copied to clipboard");
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
@@ -208,6 +208,7 @@ export const columns: ColumnDef<ProjectProposalProps>[] = [
             <AvatarImage
               src={user.user?.image || ""}
               alt={user.user?.username || ""}
+              className='object-cover'
             />
             <AvatarFallback className="rounded-lg">
               {(user.user?.username || "U").charAt(0)}

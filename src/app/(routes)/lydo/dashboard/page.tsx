@@ -9,7 +9,6 @@ import EventCalendar from "../_components/event-calendar";
 import { BudgetPieChart } from "../_components/budget-pie-chart";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { RecentActivitiesTable } from "../_components/recent-activities-table";
 import Heading from "@/components/globals/heading";
 import FilterBarangay from "../_components/filter-barangay";
 import Image from "next/image";
@@ -182,36 +181,6 @@ const Page = async ({
     rejected: { label: "Rejected", color: "var(--destructive)" },
   };
 
-  const logs = await db.systemLogs.findMany({
-    orderBy: { createdAt: "desc" },
-    where: {
-      user: {
-        // only include logs where the related user is NOT admin
-        barangay,
-        role: { not: "ADMIN" },
-      },
-    },
-    include: {
-      user: true,
-    },
-  });
-
-  const formattedLogs = logs.map((log) => {
-    const displayName = log.user
-      ? log.user.firstName || log.user.lastName
-        ? `${log.user.firstName ?? ""} ${log.user.lastName ?? ""}`.trim()
-        : log.user.username
-      : "Unknown User"; // fallback if user is null
-
-    return {
-      id: log.id,
-      name: displayName,
-      action: log.action || "Unknown",
-      barangay: log.user?.barangay || "Unknown",
-      date: log.createdAt.toLocaleString(),
-    };
-  });
-
   let events: any[] = [];
 
   if (barangay) {
@@ -337,7 +306,6 @@ const Page = async ({
           <EventCalendar events={events} />
         </div>
         <div className="lg:col-span-3 space-y-5">
-          <RecentActivitiesTable data={formattedLogs} />
           <BudgetPieChart budgetDistribution={budgetDistribution} />
         </div>
       </div>

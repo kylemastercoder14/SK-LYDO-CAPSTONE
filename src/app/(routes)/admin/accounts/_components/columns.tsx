@@ -35,9 +35,9 @@ export const columns: ColumnDef<User>[] = [
       const displayName = fullName || user.username || "Unknown User";
 
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-2.5">
           <Avatar className="rounded-lg">
-            <AvatarImage src={user.image || ""} alt={user.username || ""} />
+            <AvatarImage src={user.image || ""} className='object-cover' alt={user.username || ""} />
             <AvatarFallback className="rounded-lg">
               {(user.username || "U").charAt(0)}
             </AvatarFallback>
@@ -48,7 +48,7 @@ export const columns: ColumnDef<User>[] = [
               title={row.original.id}
               className="text-xs cursor-pointer text-primary gap-2 flex items-center"
             >
-              <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
+              <span className="w-[190px] hover:underline text-muted-foreground truncate overflow-hidden whitespace-nowrap">
                 {row.original.id}
               </span>
               {copied ? (
@@ -92,6 +92,10 @@ export const columns: ColumnDef<User>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const role = row.original.role || "N/A";
+      return <span className='ml-2.5'>{role}</span>;
+    },
   },
   {
     accessorKey: "officialType",
@@ -108,7 +112,7 @@ export const columns: ColumnDef<User>[] = [
     },
     cell: ({ row }) => {
       const officialType = row.original.officialType || "N/A";
-      return <span>{officialType.toUpperCase().replace(/-/g, "_")}</span>;
+      return <span className='ml-2.5'>{officialType.toUpperCase().replace(/-/g, "_")}</span>;
     },
   },
   {
@@ -126,7 +130,7 @@ export const columns: ColumnDef<User>[] = [
     },
     cell: ({ row }) => {
       const barangay = row.original.barangay || "N/A";
-      return <span>{barangay.toUpperCase().replace(/-/g, "_")}</span>;
+      return <span className='ml-2.5'>{barangay.toUpperCase().replace(/-/g, "_")}</span>;
     },
   },
   {
@@ -146,7 +150,7 @@ export const columns: ColumnDef<User>[] = [
       const isActive = row.original.isActive;
       return (
         <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+          className={`inline-flex ml-2.5 items-center px-2 py-1 rounded-full text-xs font-semibold ${
             isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
           }`}
         >
@@ -171,7 +175,7 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const date = new Date(row.original.createdAt);
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm ml-2.5">
           {date.toLocaleDateString()} {date.toLocaleTimeString()}
         </span>
       );

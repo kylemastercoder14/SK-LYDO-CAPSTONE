@@ -36,14 +36,62 @@ const Page = async () => {
     meetingAgendaPrevious,
     projectProposalsData,
   ] = await Promise.all([
-    db.projectReports.count(),
-    db.projectReports.count(),
-    db.budgetReports.count(),
-    db.budgetReports.count(),
-    db.cBYDP.count(),
-    db.cBYDP.count(),
-    db.meetingAgenda.count(),
-    db.meetingAgenda.count(),
+    db.projectReports.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.projectReports.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.budgetReports.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.budgetReports.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.cBYDP.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.cBYDP.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.meetingAgenda.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
+    db.meetingAgenda.count({
+      where: {
+        user: {
+          barangay: user.barangay,
+        },
+      },
+    }),
     db.projectProposal.findMany({
       select: {
         createdAt: true,
@@ -52,6 +100,11 @@ const Page = async () => {
       orderBy: {
         createdAt: "asc",
       },
+      where: {
+        user: {
+          barangay: user.barangay
+        }
+      }
     }),
   ]);
 
@@ -171,8 +224,15 @@ const Page = async () => {
             />
           </div>
         )}
-        <div className={barangayBanner?.barangayBanner ? "lg:col-span-3" : "lg:col-span-5"}>
-          <OfficialsTable data={formattedOfficials} userRole={user.officialType || ""} />
+        <div
+          className={
+            barangayBanner?.barangayBanner ? "lg:col-span-3" : "lg:col-span-5"
+          }
+        >
+          <OfficialsTable
+            data={formattedOfficials}
+            userRole={user.officialType || ""}
+          />
         </div>
       </div>
       <div className="grid lg:grid-cols-4 grid-cols-1 gap-5">

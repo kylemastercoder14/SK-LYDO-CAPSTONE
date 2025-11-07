@@ -32,37 +32,72 @@ const Page = async ({
     take: 4,
   });
 
-  const budgetReport = await db.budgetReports.findMany({
-    where: {
-      isArchived: false,
-      user: {
-        barangay,
-      },
-    },
-    take: 5,
-  });
+  let budgetReport;
 
-  const meetingAgenda = await db.meetingAgenda.findMany({
-    orderBy: {
-      createdAt: "asc",
-    },
-    where: {
-      isArchived: false,
-      user: {
-        barangay,
+  if (barangay) {
+    budgetReport = await db.budgetReports.findMany({
+      where: {
+        isArchived: false,
+        user: {
+          barangay,
+        },
       },
-    },
-    take: 5,
-  });
+      take: 5,
+    });
+  } else {
+    budgetReport = await db.budgetReports.findMany({
+      where: {
+        isArchived: false,
+      },
+      take: 5,
+    });
+  }
 
-  const skParticipant = await db.projectProposal.findMany({
-    where: {
-      isArchived: false,
-      user: {
-        barangay,
+  let meetingAgenda;
+
+  if (barangay) {
+    meetingAgenda = await db.meetingAgenda.findMany({
+      orderBy: {
+        createdAt: "asc",
       },
-    },
-  });
+      where: {
+        isArchived: false,
+        user: {
+          barangay,
+        },
+      },
+      take: 5,
+    });
+  } else {
+    meetingAgenda = await db.meetingAgenda.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+      where: {
+        isArchived: false,
+      },
+      take: 5,
+    });
+  }
+
+  let skParticipant;
+
+  if (barangay) {
+    skParticipant = await db.projectProposal.findMany({
+      where: {
+        isArchived: false,
+        user: {
+          barangay,
+        },
+      },
+    });
+  } else {
+    skParticipant = await db.projectProposal.findMany({
+      where: {
+        isArchived: false,
+      },
+    });
+  }
 
   return (
     <div className="p-6">
@@ -104,9 +139,11 @@ const Page = async ({
                   key={project.id}
                   className="border relative p-4 rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <div className="text-xs absolute capitalize bg-primary text-white -top-2 right-3 px-1.5 py-0.5 rounded-sm">
-                    {(project.user?.barangay ?? "").replace(/-/g, " ")}
-                  </div>
+                  {!barangay && (
+                    <div className="text-xs absolute uppercase bg-blue-700 text-white -top-2 right-3 px-1.5 py-0.5 rounded-sm">
+                      {(project.user?.barangay ?? "").replace(/-/g, " ")}
+                    </div>
+                  )}
                   <h3 className="font-medium">{project.title}</h3>
                   <p className="text-sm text-muted-foreground">
                     Status:{" "}
@@ -137,7 +174,7 @@ const Page = async ({
         {/* Budget and Meetings Side by Side */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Budget Report Section */}
-          <div className="bg-card p-6 rounded-lg shadow">
+          <div className="bg-card border p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">SK Budget Report</h2>
             {budgetReport.length === 0 ? (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground">
@@ -163,31 +200,32 @@ const Page = async ({
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-gray-200">
-                    {budgetReport.map((item, index) => (
-                      <tr key={index}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                          {item.name}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                          ₱{item.allocated?.toLocaleString() || 0}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
-                          ₱{item.spent?.toLocaleString() || 0}
-                        </td>
-                        <td
-                          className={`px-4 py-3 whitespace-nowrap text-sm ${
-                            item.allocated! - item.spent! < 0
-                              ? "text-red-500"
-                              : "text-green-500"
-                          }`}
-                        >
-                          ₱
-                          {(
-                            item.allocated ?? 0 - (item.spent ?? 0)
-                          ).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
+                    {budgetReport.map((item, index) => {
+                      const allocated = Number(item.allocated ?? 0);
+                      const spent = Number(item.spent ?? 0);
+                      const remaining = allocated - spent;
+
+                      return (
+                        <tr key={index}>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                            {item.name}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm">
+                            ₱{allocated.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm">
+                            ₱{spent.toLocaleString()}
+                          </td>
+                          <td
+                            className={`px-4 py-3 whitespace-nowrap text-sm ${
+                              remaining < 0 ? "text-red-500" : "text-green-500"
+                            }`}
+                          >
+                            ₱{remaining.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -195,7 +233,7 @@ const Page = async ({
           </div>
 
           {/* Meeting Agenda Section */}
-          <div className="bg-card p-6 rounded-lg shadow">
+          <div className="bg-card p-6 border rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">SK Schedules</h2>
             {meetingAgenda.length === 0 ? (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground">
@@ -250,7 +288,7 @@ const Page = async ({
                           d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                         />
                       </svg>
-                      <span>{meeting.location}</span>
+                      <span>{meeting.location || "Not Assigned"}</span>
                     </div>
                   </div>
                 ))}

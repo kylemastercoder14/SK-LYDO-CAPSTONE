@@ -34,10 +34,10 @@ export const columns: ColumnDef<SystemLogsProps>[] = [
       const displayName = fullName || user.user?.username || "Unknown User";
 
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center ml-2.5 gap-2">
           <Avatar className="rounded-lg">
             <AvatarImage src={user.user?.image || ""} alt={user.user?.username || ""} />
-            <AvatarFallback className="rounded-lg">
+            <AvatarFallback className="rounded-lg object-cover">
               {(user.user?.username || "U").charAt(0)}
             </AvatarFallback>
           </Avatar>
@@ -47,7 +47,7 @@ export const columns: ColumnDef<SystemLogsProps>[] = [
               title={user.user?.id}
               className="text-xs cursor-pointer text-primary gap-2 flex items-center"
             >
-              <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
+              <span className="w-[200px] text-muted-foreground hover:underline truncate overflow-hidden whitespace-nowrap">
                 {user.user?.id}
               </span>
               {copied ? (
@@ -94,7 +94,7 @@ export const columns: ColumnDef<SystemLogsProps>[] = [
     cell: ({ row }) => {
       const logs = row.original.action;
       return (
-        <span>
+        <span className='ml-2.5'>
           {logs}
         </span>
       );
@@ -116,7 +116,7 @@ export const columns: ColumnDef<SystemLogsProps>[] = [
     cell: ({ row }) => {
       const time = new Date(row.original.createdAt);
       return (
-        <span>
+        <span className='ml-2.5'>
           {time.toLocaleTimeString()}
         </span>
       );
@@ -138,7 +138,7 @@ export const columns: ColumnDef<SystemLogsProps>[] = [
     cell: ({ row }) => {
       const date = new Date(row.original.createdAt);
       return (
-        <span>
+        <span className='ml-2.5'>
           {date.toLocaleDateString()}
         </span>
       );

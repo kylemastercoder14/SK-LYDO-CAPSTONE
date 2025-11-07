@@ -90,7 +90,7 @@ const Page = () => {
       {Object.entries(grouped).map(([committee, items]) => {
         const total = items.length;
         const accomplishedProjects = items.filter(
-          (p) => p.status === "Accomplished" || p.status === "Completed"
+          (p) => p.status === "Accomplished"
         );
         const accomplished = accomplishedProjects.length;
         const pending = items.filter((p) => p.status === "Pending").length;

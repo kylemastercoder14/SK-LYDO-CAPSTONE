@@ -25,25 +25,25 @@ export const columns: ColumnDef<MeetingAgendaProps>[] = [
     },
     cell: ({ row }) => {
       const name = row.original.name;
-      const user = row.original;
+      const meeting = row.original;
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const [copied, setCopied] = useState(false);
       return (
         <div className="ml-2.5">
           <span>{name}</span>
           <div
-            title={user.user?.id}
+            title={meeting.id}
             className="text-xs cursor-pointer text-primary gap-2 flex items-center"
           >
-            <span className="w-[190px] hover:underline truncate overflow-hidden whitespace-nowrap">
-              {user.user?.id}
+            <span className="w-[200px] text-muted-foreground hover:underline truncate overflow-hidden whitespace-nowrap">
+              {meeting.id}
             </span>
             {copied ? (
               <CheckIcon className="size-3 text-green-600" />
             ) : (
               <CopyIcon
                 onClick={() => {
-                  navigator.clipboard.writeText(user.user?.id || "");
+                  navigator.clipboard.writeText(meeting.id || "");
                   toast.success("Meeting agenda ID copied to clipboard");
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
@@ -138,6 +138,7 @@ export const columns: ColumnDef<MeetingAgendaProps>[] = [
             <AvatarImage
               src={user.user?.image || ""}
               alt={user.user?.username || ""}
+              className='object-cover'
             />
             <AvatarFallback className="rounded-lg">
               {(user.user?.username || "U").charAt(0)}

@@ -27,6 +27,7 @@ const FilterBarangay = () => {
     }
 
     router.push(`?${params.toString()}`);
+    router.refresh();
   };
 
   return (
