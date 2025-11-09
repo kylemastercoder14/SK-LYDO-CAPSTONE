@@ -2,9 +2,11 @@ import React from "react";
 import db from "@/lib/db";
 import Heading from "@/components/globals/heading";
 import FileBrowser from "./file-browser";
+import { getServerSession } from '@/lib/session';
 
 const Page = async (props: { params: Promise<{ year: string }> }) => {
   const { year } = await props.params;
+  const user = await getServerSession();
 
   // 👉 Filter by year from createdAt
   const data = await db.aBYIP.findMany({
@@ -26,7 +28,7 @@ const Page = async (props: { params: Promise<{ year: string }> }) => {
       />
 
       <div className="mt-5">
-        <FileBrowser files={data} />
+        <FileBrowser files={data} userRole={user?.officialType as string} />
       </div>
     </div>
   );

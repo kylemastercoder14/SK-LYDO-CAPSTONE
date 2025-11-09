@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { MinutesMeetingFormValues } from "@/types/types";
 import { createMeetingMinutes, updateMeetingMinutes } from "@/actions";
+import { formatFileType } from "@/lib/utils";
 
 interface MinutesMeetingFormProps {
   initialData: MeetingMinutes | null;
@@ -70,7 +71,9 @@ const MinutesMeetingForm: React.FC<MinutesMeetingFormProps> = ({
     }
   };
 
-  const title = initialData ? "Edit Minutes of Meeting" : "Create Minutes of Meeting";
+  const title = initialData
+    ? "Edit Minutes of Meeting"
+    : "Create Minutes of Meeting";
   const action = initialData ? "Save changes" : "Create agenda";
 
   return (
@@ -110,11 +113,7 @@ const MinutesMeetingForm: React.FC<MinutesMeetingFormProps> = ({
                 <FormItem>
                   <FormLabel>File Size</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="e.g., 2.5 MB"
-                      {...field}
-                    />
+                    <Input disabled placeholder="e.g., 2.5 MB" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,11 +127,7 @@ const MinutesMeetingForm: React.FC<MinutesMeetingFormProps> = ({
                 <FormItem>
                   <FormLabel>File Type</FormLabel>
                   <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="e.g., PDF"
-                      {...field}
-                    />
+                    <Input disabled placeholder="e.g., PDF" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,7 +142,14 @@ const MinutesMeetingForm: React.FC<MinutesMeetingFormProps> = ({
                   <FormLabel>File URL</FormLabel>
                   <FormControl>
                     <SingleFileUpload
-                      onFileUpload={field.onChange}
+                      onFileUpload={({ url, size, type }) => {
+                        form.setValue("fileUrl", url);
+                        form.setValue(
+                          "fileSize",
+                          `${(size / 1024 / 1024).toFixed(2)} MB`
+                        );
+                        form.setValue("fileType", formatFileType(type));
+                      }}
                       defaultValue={field.value}
                       bucket="assets"
                       maxFileSizeMB={5}

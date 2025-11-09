@@ -1,10 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useTransition } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { extractFileName, fileIcon } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { deleteFileActionCbydp } from "@/actions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type FileCardProps = {
   report: {
@@ -12,13 +17,16 @@ type FileCardProps = {
     fileUrl: string;
     fileType?: string;
   };
+  userRole: string;
 };
 
 const PdfViewer = dynamic(() => import("./pdf-viewer"), {
   ssr: false,
 });
 
-const FileCard = ({ report }: FileCardProps) => {
+const FileCard = ({ report, userRole }: FileCardProps) => {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const fileName = extractFileName(report.fileUrl);
   const fileType = report.fileType ?? "";
 
@@ -51,12 +59,38 @@ const FileCard = ({ report }: FileCardProps) => {
     window.open(report.fileUrl, "_blank", "noopener,noreferrer");
   };
 
+  const handleDelete = () => {
+    startTransition(async () => {
+      const res = await deleteFileActionCbydp(report.id);
+      if (res.success) {
+        toast.success(res.message);
+        router.refresh();
+      } else {
+        toast.error(res.message);
+      }
+    });
+  };
+
   return (
     <Card
       onClick={handleOpenFile}
-      className="bg-secondary p-0 hover:bg-zinc-200 cursor-pointer"
+      className="bg-secondary p-0 hover:bg-zinc-200 cursor-pointer relative"
     >
-      <CardContent className="p-3">
+      <CardContent className="p-3 space-y-3">
+        {userRole === "SECRETARY" && (
+          <Button
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2"
+            disabled={isPending}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        )}
         {/* Header */}
         <div className="flex items-center gap-4">
           <div className="relative size-5">

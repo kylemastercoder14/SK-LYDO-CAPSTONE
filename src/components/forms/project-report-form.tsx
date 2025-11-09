@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import SingleFileUpload from "@/components/globals/file-upload";
 import { ProjectReportFormValues } from "@/types/types";
 import { createProjectReport, updateProjectReport } from "@/actions";
+import { formatFileType } from '@/lib/utils';
 
 interface ProjectReportFormProps {
   initialData: ProjectReports | null;
@@ -111,7 +112,7 @@ const ProjectReportForm: React.FC<ProjectReportFormProps> = ({
                   <FormLabel>File Size</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled
                       placeholder="e.g., 2.5 MB"
                       {...field}
                     />
@@ -129,7 +130,7 @@ const ProjectReportForm: React.FC<ProjectReportFormProps> = ({
                   <FormLabel>File Type</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled
                       placeholder="e.g., PDF"
                       {...field}
                     />
@@ -147,7 +148,14 @@ const ProjectReportForm: React.FC<ProjectReportFormProps> = ({
                   <FormLabel>File URL</FormLabel>
                   <FormControl>
                     <SingleFileUpload
-                      onFileUpload={field.onChange}
+                      onFileUpload={({ url, size, type }) => {
+                        form.setValue("fileUrl", url);
+                        form.setValue(
+                          "fileSize",
+                          `${(size / 1024 / 1024).toFixed(2)} MB`
+                        );
+                        form.setValue("fileType", formatFileType(type));
+                      }}
                       defaultValue={field.value}
                       bucket="assets"
                       maxFileSizeMB={5}

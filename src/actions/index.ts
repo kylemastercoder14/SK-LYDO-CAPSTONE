@@ -41,6 +41,7 @@ import { OfficialType } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { createClient } from "../lib/supabase/server";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
@@ -1045,7 +1046,7 @@ export async function updateProjectProposal(
           isThereCollaboration: validatedData.isThereCollaboration,
         }),
         ...(validatedData.committee !== undefined && {
-          committee: validatedData.committee || null
+          committee: validatedData.committee || null,
         }),
       } as any,
     });
@@ -2326,5 +2327,87 @@ export async function retrieveResolution(id: string, userId: string) {
   } catch (error) {
     console.error(`Error retrieving Resolution with ID ${id}:`, error);
     throw new Error("Failed to retrieve Resolution.");
+  }
+}
+
+export async function deleteFileActionAbyip(id: string) {
+  try {
+    const supabase = createClient();
+
+    // 1️⃣ Get the file record
+    const file = await db.aBYIP.findUnique({
+      where: { id },
+    });
+
+    if (!file) {
+      return { success: false, message: "File not found." };
+    }
+
+    // 2️⃣ Extract the file path from the file URL
+    const urlParts = file.fileUrl.split("/");
+    const filePath = decodeURIComponent(urlParts.slice(4).join("/")); // e.g., assets/folder/file.png
+
+    // 3️⃣ Delete from Supabase Storage
+    const { error: storageError } = await (
+      await supabase
+    ).storage
+      .from("assets") // your bucket name
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error("Supabase storage delete error:", storageError);
+      return { success: false, message: "Failed to delete file from storage." };
+    }
+
+    // 4️⃣ Delete record from database
+    await db.aBYIP.delete({
+      where: { id },
+    });
+
+    return { success: true, message: "File deleted successfully." };
+  } catch (error) {
+    console.error("❌ Error deleting file:", error);
+    return { success: false, message: "An unexpected error occurred." };
+  }
+}
+
+export async function deleteFileActionCbydp(id: string) {
+  try {
+    const supabase = createClient();
+
+    // 1️⃣ Get the file record
+    const file = await db.cBYDP.findUnique({
+      where: { id },
+    });
+
+    if (!file) {
+      return { success: false, message: "File not found." };
+    }
+
+    // 2️⃣ Extract the file path from the file URL
+    const urlParts = file.fileUrl.split("/");
+    const filePath = decodeURIComponent(urlParts.slice(4).join("/")); // e.g., assets/folder/file.png
+
+    // 3️⃣ Delete from Supabase Storage
+    const { error: storageError } = await (
+      await supabase
+    ).storage
+      .from("assets") // your bucket name
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error("Supabase storage delete error:", storageError);
+      return { success: false, message: "Failed to delete file from storage." };
+    }
+
+    // 4️⃣ Delete record from database
+    await db.cBYDP.delete({
+      where: { id },
+    });
+
+    return { success: true, message: "File deleted successfully." };
+  } catch (error) {
+    console.error("❌ Error deleting file:", error);
+    return { success: false, message: "An unexpected error occurred." };
   }
 }

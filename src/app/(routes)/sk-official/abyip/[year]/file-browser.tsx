@@ -14,9 +14,10 @@ type Props = {
     fileUrl: string;
     createdAt: string | Date;
   }[];
+  userRole: string;
 };
 
-const FileBrowser = ({ files }: Props) => {
+const FileBrowser = ({ files, userRole }: Props) => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
@@ -73,7 +74,7 @@ const FileBrowser = ({ files }: Props) => {
       ) : (
         <div className="grid lg:grid-cols-4 sm:grid-cols-2 gap-5">
           {filteredFiles.map((file) => (
-            <FileCard key={file.id} report={file} />
+            <FileCard key={file.id} userRole={userRole} report={file} />
           ))}
         </div>
       )}
