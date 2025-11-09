@@ -47,7 +47,7 @@ const CellAction = ({ data }: { data: ProjectProposalProps }) => {
     async function getClientSession() {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/session`,
+          `/api/auth/session`,
           {
             credentials: "include",
           }
