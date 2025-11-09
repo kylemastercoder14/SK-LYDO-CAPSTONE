@@ -33,6 +33,7 @@ export type FormState = {
   user?: {
     role: UserRole;
     id: string;
+    officialType?: string | null;
   };
   hasSecurityQuestion?: boolean;
 };

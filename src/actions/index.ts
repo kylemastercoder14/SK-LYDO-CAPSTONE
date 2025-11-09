@@ -46,12 +46,16 @@ import { createClient } from "../lib/supabase/server";
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
 export async function setAuthCookie(
-  user: { id: string; role: string },
+  user: { id: string; role: string; officialType?: string | null }, // added officialType
   remember: boolean
 ) {
-  const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
-    expiresIn: remember ? "30d" : "1d",
-  });
+  const token = jwt.sign(
+    { id: user.id, role: user.role, officialType: user.officialType }, // include officialType
+    JWT_SECRET,
+    {
+      expiresIn: remember ? "30d" : "1d",
+    }
+  );
 
   (await cookies()).set("auth-session", token, {
     httpOnly: true,
@@ -131,7 +135,10 @@ export async function loginAction(
 
     // Set session cookie
     if (hasSecurityQuestion) {
-      await setAuthCookie({ id: user.id, role: user.role }, remember ?? false);
+      await setAuthCookie(
+        { id: user.id, role: user.role, officialType: user.officialType },
+        remember ?? false
+      );
     }
 
     // Get redirect URL from form data if it exists
@@ -153,7 +160,7 @@ export async function loginAction(
     return {
       success: true,
       message: "Login successful",
-      user: { role: user.role, id: user.id },
+      user: { role: user.role, officialType: user.officialType, id: user.id },
       hasSecurityQuestion,
       redirect: finalRedirect,
     };
