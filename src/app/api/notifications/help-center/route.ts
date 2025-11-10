@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
@@ -26,11 +25,28 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { title, description, attachment, priority, userId } = body;
+    const {
+      title,
+      description,
+      attachment,
+      priority,
+      userId,
+      guestName,
+      guestEmail,
+    } = body;
 
-    if (!title || !description || !priority || !userId) {
+    // Validate required fields
+    if (!title || !description || !priority) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // If guest user, require guest name & email
+    if (!userId && (!guestName || !guestEmail)) {
+      return NextResponse.json(
+        { error: "Guest name and email are required for guest users." },
         { status: 400 }
       );
     }
@@ -40,9 +56,11 @@ export async function POST(req: Request) {
         title,
         description,
         attachment: attachment?.url ?? null,
-        priority: priority as any,
+        priority,
         status: "OPEN",
-        userId,
+        userId: userId || null,
+        guestName: userId ? null : guestName,
+        guestEmail: userId ? null : guestEmail,
       },
       include: { user: true },
     });

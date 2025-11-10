@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { EditIcon, MoreHorizontal, CheckCircle, XCircle } from "lucide-react";
 
@@ -10,19 +10,37 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/globals/alert-modal";
 import { Modal } from "@/components/ui/modal";
-import { BudgetDistribution } from "@prisma/client";
+import { BudgetDistribution, User } from "@prisma/client";
 import BudgetDistributionForm from "@/components/forms/budget-distribution-form";
-import { toast } from 'sonner';
-import { approveBudgetDistribution, rejectBudgetDistribution } from '@/actions';
+import { toast } from "sonner";
+import { approveBudgetDistribution, rejectBudgetDistribution } from "@/actions";
 
 const CellAction = ({ data }: { data: BudgetDistribution }) => {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    async function getClientSession() {
+      try {
+        const response = await fetch(`/api/auth/session`, {
+          credentials: "include",
+        });
+        if (!response.ok) return setUser(null);
+        const data = await response.json();
+        setUser(data.user || null);
+      } catch (error) {
+        console.error("Client session error:", error);
+        setUser(null);
+      }
+    }
+    getClientSession();
+  }, []);
+
   const [openApprove, setOpenApprove] = React.useState(false);
   const [openReject, setOpenReject] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
@@ -89,18 +107,19 @@ const CellAction = ({ data }: { data: BudgetDistribution }) => {
             <EditIcon className="size-4" />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {data.isApproved ? (
-            <DropdownMenuItem onClick={() => setOpenReject(true)}>
-              <XCircle className="size-4" />
-              Reject
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onClick={() => setOpenApprove(true)}>
-              <CheckCircle className="size-4" />
-              Approve
-            </DropdownMenuItem>
-          )}
+          {/* <DropdownMenuSeparator /> */}
+          {user?.officialType === "CHAIRPERSON" &&
+            (data.isApproved ? (
+              <DropdownMenuItem onClick={() => setOpenReject(true)}>
+                <XCircle className="size-4" />
+                Reject
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => setOpenApprove(true)}>
+                <CheckCircle className="size-4" />
+                Approve
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

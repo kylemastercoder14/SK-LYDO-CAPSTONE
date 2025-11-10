@@ -32,9 +32,11 @@ type TicketFormData = {
   description: string;
   priority: "LOW" | "MEDIUM" | "HIGH";
   attachment?: Attachment;
+  guestName?: string;
+  guestEmail?: string;
 };
 
-const HelpCenter = ({ user }: { user: User }) => {
+const HelpCenter = ({ user }: { user?: User | null }) => {
   const [open, setOpen] = useState(false);
   const { register, handleSubmit, reset, setValue, watch } =
     useForm<TicketFormData>();
@@ -45,7 +47,7 @@ const HelpCenter = ({ user }: { user: User }) => {
   const onSubmit = async (data: TicketFormData) => {
     const payload = {
       ...data,
-      userId: user.id,
+      userId: user?.id ?? null, // null if guest
     };
 
     const res = await fetch("/api/notifications/help-center", {
@@ -65,7 +67,6 @@ const HelpCenter = ({ user }: { user: User }) => {
 
   return (
     <>
-      {/* Floating Button */}
       <div className="fixed bottom-4 right-4 z-50">
         <Button
           className="bg-red-600 hover:bg-red-700 text-white shadow-lg"
@@ -75,7 +76,6 @@ const HelpCenter = ({ user }: { user: User }) => {
         </Button>
       </div>
 
-      {/* Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="!max-w-xl">
           <DialogHeader>
@@ -83,6 +83,28 @@ const HelpCenter = ({ user }: { user: User }) => {
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Guest-only fields */}
+            {!user && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Full Name</Label>
+                  <Input
+                    placeholder="Enter your full name"
+                    {...register("guestName", { required: true })}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    {...register("guestEmail", { required: true })}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Title */}
             <div className="space-y-1.5">
               <Label>Title</Label>
@@ -120,15 +142,9 @@ const HelpCenter = ({ user }: { user: User }) => {
               </Select>
 
               <p className="text-xs text-muted-foreground mt-1">
-                ⚠️ Please choose{" "}
-                <span className="font-semibold text-red-600">
-                  High Priority
-                </span>{" "}
-                only if your issue is urgent or critical (e.g., system not
-                working, data loss, or emergency concern). For general questions
-                or minor issues, select{" "}
-                <span className="font-semibold">Low</span> or{" "}
-                <span className="font-semibold">Medium</span>.
+                ⚠️ Use{" "}
+                <span className="font-semibold text-red-600">High Priority</span>{" "}
+                only for urgent issues (e.g. system not working, data loss).
               </p>
             </div>
 
@@ -143,7 +159,6 @@ const HelpCenter = ({ user }: { user: User }) => {
               />
             </div>
 
-            {/* Submit Button */}
             <DialogFooter>
               <Button
                 type="submit"

@@ -6,7 +6,7 @@ import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { OfficialType, UserRole } from "@prisma/client";
 import ActiveStatus from "./_components/active-status";
-import HelpCenter from "./_components/help-center";
+import HelpCenter from "@/components/globals/help-center";
 
 const SkOfficialLayout = async ({
   children,

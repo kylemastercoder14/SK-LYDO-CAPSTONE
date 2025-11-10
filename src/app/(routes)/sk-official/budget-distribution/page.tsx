@@ -33,10 +33,12 @@ const Page = async () => {
           title="Budget Distributions"
           description="View and manage budget distributions for your barangay."
         />
-        <BudgetDistributionModal
-          barangay={user?.barangay as string}
-          userId={user?.id ?? ""}
-        />
+        {user?.officialType === "TREASURER" && (
+          <BudgetDistributionModal
+            barangay={user?.barangay as string}
+            userId={user?.id ?? ""}
+          />
+        )}
       </div>
       <div className="mt-5">
         <Tabs defaultValue={years[0]?.toString() ?? "all"}>

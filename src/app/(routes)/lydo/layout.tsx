@@ -4,34 +4,38 @@ import { AppSidebar } from "./_components/app-sidebar";
 import { SiteHeader } from "./_components/site-header";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import HelpCenter from "@/components/globals/help-center";
 
-const LydoLayout = async ({children}: {children: React.ReactNode}) => {
+const LydoLayout = async ({ children }: { children: React.ReactNode }) => {
   const user = await getServerSession();
 
   // If no session exists, redirect to sign-in
   if (!user) {
-	redirect("/sign-in");
+    redirect("/sign-in");
   }
 
   // Optional: Verify user role if needed
   if (user.role !== "LYDO") {
-	redirect("/unauthorized");
+    redirect("/unauthorized");
   }
   return (
-	<SidebarProvider
-	  style={
-		{
-		  "--sidebar-width": "calc(var(--spacing) * 72)",
-		  "--header-height": "calc(var(--spacing) * 12)",
-		} as React.CSSProperties
-	  }
-	>
-	  <AppSidebar variant="inset" />
-	  <SidebarInset>
-		<SiteHeader user={user} />
-		{children}
-	  </SidebarInset>
-	</SidebarProvider>
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader user={user} />
+        <main className="relative">
+          {children}
+          <HelpCenter user={user} />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 
