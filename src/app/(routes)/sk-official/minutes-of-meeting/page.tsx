@@ -30,7 +30,9 @@ const Page = async () => {
           title="Minutes of Meeting"
           description="View and manage minutes of meeting for your barangay."
         />
-        <MinutesMeetingModal userId={user?.id ?? ""} />
+        {user?.officialType === "SECRETARY" && (
+          <MinutesMeetingModal userId={user?.id ?? ""} />
+        )}
       </div>
       <div className="mt-5">
         <Tabs defaultValue="active">

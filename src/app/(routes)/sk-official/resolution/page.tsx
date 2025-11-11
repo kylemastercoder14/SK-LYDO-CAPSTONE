@@ -30,7 +30,9 @@ const Page = async () => {
           title="Resolution"
           description="View and manage resolution for your barangay."
         />
-        <ResolutionModal userId={user?.id ?? ""} />
+        {user?.officialType === "SECRETARY" && (
+          <ResolutionModal userId={user?.id ?? ""} />
+        )}
       </div>
       <div className="mt-5">
         <Tabs defaultValue="active">

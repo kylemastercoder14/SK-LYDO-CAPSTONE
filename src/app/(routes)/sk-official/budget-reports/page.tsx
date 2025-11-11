@@ -30,7 +30,9 @@ const Page = async () => {
           title="Budget Reports"
           description="View and manage budget reports for your barangay."
         />
-        <BudgetReport userId={user?.id ?? ""} />
+        {user?.officialType === "TREASURER" && (
+          <BudgetReport userId={user?.id ?? ""} />
+        )}
       </div>
       <div className="mt-5">
         <Tabs defaultValue="active">
