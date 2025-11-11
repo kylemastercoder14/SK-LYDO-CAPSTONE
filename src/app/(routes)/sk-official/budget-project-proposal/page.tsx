@@ -30,7 +30,9 @@ const Page = async () => {
           title="Budget & Project Proposals"
           description="View and manage budget & project proposals for your barangay."
         />
-        <ProjectProposalModal userId={user?.id ?? ""} />
+        {user?.officialType === "KAGAWAD" && (
+          <ProjectProposalModal userId={user?.id ?? ""} />
+        )}
       </div>
       <div className="mt-5">
         <Tabs defaultValue="all">

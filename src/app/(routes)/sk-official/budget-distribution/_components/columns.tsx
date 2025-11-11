@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useState } from "react";
 import CellAction from "./cell-action";
 import { BudgetDistribution } from "@prisma/client";
-import { Badge } from "@/components/ui/badge";
 
 export const columns: ColumnDef<BudgetDistribution>[] = [
   {
@@ -99,47 +98,6 @@ export const columns: ColumnDef<BudgetDistribution>[] = [
     cell: ({ row }) => {
       const year = row.original.year;
       return <span className="ml-2.5">{year}</span>;
-    },
-  },
-  {
-    accessorKey: "isApproved",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Status
-          <ChevronsUpDown className="h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const status = row.original.isApproved;
-      let badgeVariant: "default" | "secondary" | "destructive" | "outline" =
-        "default";
-      let badgeColorClass = "";
-
-      switch (status) {
-        case true:
-          badgeVariant = "default";
-          badgeColorClass = "bg-green-100 text-green-700 hover:bg-green-200";
-          break;
-        case false:
-          badgeVariant = "default";
-          badgeColorClass = "bg-yellow-100 text-yellow-700 hover:bg-yellow-200";
-          break;
-        default:
-          badgeVariant = "outline";
-          badgeColorClass = "bg-gray-100 text-gray-700 hover:bg-gray-200";
-          break;
-      }
-
-      return (
-        <Badge className={`ml-2.5 ${badgeColorClass}`} variant={badgeVariant}>
-          {status ? "Approved" : "Pending"}
-        </Badge>
-      );
     },
   },
   {
