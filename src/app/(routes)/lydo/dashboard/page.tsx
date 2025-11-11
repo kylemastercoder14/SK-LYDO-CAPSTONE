@@ -258,7 +258,7 @@ const Page = async ({
         id: official.id,
         name: displayName,
         position: official.officialType || "Unknown",
-        committee: official.committee || "Unrequired",
+        committee: official.committee || "Unassigned",
       };
     });
   }

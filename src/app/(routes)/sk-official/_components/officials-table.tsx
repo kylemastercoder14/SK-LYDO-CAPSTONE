@@ -83,7 +83,7 @@ const getColumns = (userRole: string): ColumnDef<z.infer<typeof schema>>[] => [
     cell: ({ row }) => {
       const { id, committee } = row.original;
 
-      if (userRole !== "CHAIRPERSON") return committee ?? "Unrequired";
+      if (userRole !== "CHAIRPERSON") return committee ?? "Unassigned";
       if (committee && committee.trim() !== "") return committee;
 
       return <CommitteeSelect userId={id} />;
