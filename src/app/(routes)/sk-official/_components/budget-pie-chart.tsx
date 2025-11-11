@@ -74,11 +74,23 @@ export function BudgetPieChart({
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Budget Distribution {currentYear}</CardTitle>
-        <CardDescription>
-          Showing fund allocation per committee annually.
-        </CardDescription>
+      <CardHeader className="pb-0">
+        <div className="flex items-start justify-between w-full">
+          <div>
+            <CardTitle>Budget Distribution {currentYear}</CardTitle>
+            <CardDescription>
+              Showing fund allocation per committee annually.
+            </CardDescription>
+          </div>
+
+          {/* 💰 Total in top-right corner */}
+          {total > 0 && (
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Total Budget</p>
+              <p className="text-lg font-semibold">₱{total.toLocaleString()}</p>
+            </div>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="flex-1 pb-0">
