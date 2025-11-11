@@ -73,7 +73,7 @@ const useActiveStatus = (userId: string | null) => {
 
         const isOnline = lastActiveDate > fiveMinutesAgo;
         const statusText = isOnline
-          ? "Online"
+          ? "Active"
           : `Active ${formatDistanceToNowStrict(lastActiveDate, {
               addSuffix: true,
             })}`;
