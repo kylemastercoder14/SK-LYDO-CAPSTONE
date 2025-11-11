@@ -30,7 +30,7 @@ import Heading from "@/components/globals/heading";
 import { Separator } from "@/components/ui/separator";
 import { createBudgetDistribution, updateBudgetDistribution } from "@/actions";
 import { BudgetDistributionFormValues } from "@/types/types";
-import { COMMITTEE } from "../../lib/constants";
+import { COMMITTEE } from "@/lib/constants";
 
 interface BudgetDistributionFormProps {
   initialData: BudgetDistribution | null;

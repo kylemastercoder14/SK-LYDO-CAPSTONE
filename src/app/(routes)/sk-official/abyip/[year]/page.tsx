@@ -2,7 +2,7 @@ import React from "react";
 import db from "@/lib/db";
 import Heading from "@/components/globals/heading";
 import FileBrowser from "./file-browser";
-import { getServerSession } from '@/lib/session';
+import { getServerSession } from "@/lib/session";
 
 const Page = async (props: { params: Promise<{ year: string }> }) => {
   const { year } = await props.params;
@@ -16,6 +16,9 @@ const Page = async (props: { params: Promise<{ year: string }> }) => {
         lte: new Date(`${year}-12-31`),
       },
       isArchived: false,
+      user: {
+        barangay: user?.barangay,
+      },
     },
     orderBy: { createdAt: "desc" },
   });

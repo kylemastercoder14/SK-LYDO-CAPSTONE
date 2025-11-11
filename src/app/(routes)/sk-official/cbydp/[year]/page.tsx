@@ -16,6 +16,9 @@ const Page = async (props: { params: Promise<{ year: string }> }) => {
         lte: new Date(`${year}-12-31`),
       },
       isArchived: false,
+      user: {
+        barangay: user?.barangay,
+      },
     },
     orderBy: { createdAt: "desc" },
   });
