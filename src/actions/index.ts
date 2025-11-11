@@ -2003,6 +2003,7 @@ export async function createBudgetDistribution(
         allocated: validatedData.allocated,
         year: validatedData.year,
         barangay,
+        isApproved: true,
       },
     });
 
@@ -2077,6 +2078,7 @@ export async function updateBudgetDistribution(
       data: {
         ...validatedData,
         barangay,
+        isApproved: true,
       },
     });
 
