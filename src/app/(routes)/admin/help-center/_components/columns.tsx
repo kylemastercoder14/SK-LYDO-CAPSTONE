@@ -34,7 +34,7 @@ export const columns: ColumnDef<TicketWithUser>[] = [
         lastName: "",
       };
       const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
-      const displayName = fullName || user.username || "Unknown User";
+      const displayName = fullName || user.username || ticket.guestName || "Unknown User";
 
       return (
         <div className="flex items-center gap-2 ml-2.5">
